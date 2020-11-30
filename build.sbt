@@ -13,6 +13,16 @@ val appName = "calculate-ni-frontend"
 
 val silencerVersion = "1.7.0"
 
+// +-----------------------+
+// | installReactDeps      +-----------------------+
+// +-----------------------+                       |
+// +-----------------------+            +----------v------------+             +----------------------+
+// | copyInJS              +------------> buildReactApp         +-------------> play                 |
+// +-----------------------+            +----------^------------+             +----------------------+
+// +-----------------------+                       |
+// | convertConfig         +-----------------------+
+// +-----------------------+
+
 installReactDependencies := {
   val result = JavaScriptBuild.npmProcess(reactDirectory.value, "install").run().exitValue()
   if (result != 0)
