@@ -79,8 +79,16 @@ lazy val microservice = Project(appName, file("."))
     libraryDependencies              ++= Seq(
       "uk.gov.hmrc"             %% "bootstrap-frontend-play-27" % "3.0.0",
       "uk.gov.hmrc"             %% "play-frontend-hmrc"         % "0.21.0-play-27",
-      "uk.gov.hmrc"             %% "play-frontend-govuk"        % "0.53.0-play-27"
+      "uk.gov.hmrc"             %% "play-frontend-govuk"        % "0.53.0-play-27",
+      "com.lihaoyi"             %% "scalatags"                  % "0.8.2",
+      "org.typelevel" %% "cats-core" % "2.1.1",
+      "org.typelevel" %% "spire" % "0.16.2"
     ),
+    libraryDependencies ++= Seq(
+      "io.circe" %% "circe-core",
+      "io.circe" %% "circe-generic",
+      "io.circe" %% "circe-parser"
+    ).map(_ % circeVersion),
     libraryDependencies              ++= Seq(
       "uk.gov.hmrc"             %% "bootstrap-test-play-27"   % "3.0.0",
       "org.scalatest"           %% "scalatest"                % "3.1.2",
@@ -101,6 +109,7 @@ lazy val microservice = Project(appName, file("."))
       compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full),
       "com.github.ghik" % "silencer-lib" % silencerVersion % Provided cross CrossVersion.full
     ),
+    (unmanagedSourceDirectories in Compile) ++= (unmanagedSourceDirectories in Compile in common.jvm).value,
     PlayKeys.playDefaultPort := 8668,
     reactDirectory := (baseDirectory in Compile) { _ /"react" }.value,    
     dist := (dist dependsOn moveReact).value
@@ -126,7 +135,8 @@ lazy val common = sbtcrossproject.CrossPlugin.autoImport.crossProject(JSPlatform
     ).map(_ % circeVersion),
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-core" % "2.1.1",
-      "org.typelevel" %%% "spire" % "0.16.2"
+      "org.typelevel" %%% "spire" % "0.16.2",
+      "com.lihaoyi" %%% "scalatags" % "0.8.2"
     ),
     scalacOptions -= "-Xfatal-warnings",
     addCompilerPlugin(
@@ -175,10 +185,15 @@ lazy val `frontend` = project
     scalaJSUseMainModuleInitializer := false,
     libraryDependencies ++= Seq(
       "org.scala-js" %%% "scalajs-dom" % "1.1.0",
-      "org.scala-js" %%% "scalajs-java-time" % "1.0.0"
+      "org.scala-js" %%% "scalajs-java-time" % "1.0.0",
+      "com.github.japgolly.scalajs-react" %%% "core" % "1.7.7"
     ),
+    npmDependencies in Compile ++= Seq(
+      "react" -> "16.13.1",
+      "react-dom" -> "16.13.1"),
     publish := {},
     publishLocal := {}
   )
   .enablePlugins(ScalaJSPlugin)
+  .enablePlugins(ScalaJSBundlerPlugin)
   .dependsOn(common.js)

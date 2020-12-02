@@ -14,19 +14,20 @@
  * limitations under the License.
  */
 
-package eoi
+package uk.gov.hmrc.calculatenifrontend
 
-object Period extends Enumeration {
-  type Period = Vala
+import play.api.http.{ ContentTypeOf, ContentTypes, Writeable }
+import play.api.mvc.Codec
+import scalatags.Text.all._
 
-  protected case class Vala(string: String, qtyInYear: Int) extends super.Val 
+package object controllers {
 
-  val Week = Vala("Wk", 52)
-  val Month = Vala("Mnth", 12)
-  val FourWeek = Vala("4Wk", 52/4)
-  val Year = Vala("Ann", 1)
+  implicit def contentTypeOfTag(implicit codec: Codec): ContentTypeOf[Tag] = {
+    ContentTypeOf[Tag](Some(ContentTypes.HTML))
+  }
 
-  def apply(in: String): Period = values.find(_.asInstanceOf[Vala].string.equalsIgnoreCase(in)).fold(
-    throw new NoSuchElementException()
-  )(_.asInstanceOf[Vala])
+  implicit def writeableOfTag(implicit codec: Codec): Writeable[Tag] = {
+    Writeable(tag => codec.encode("<!DOCTYPE html>\n" + tag.render))
+  }
+
 }
