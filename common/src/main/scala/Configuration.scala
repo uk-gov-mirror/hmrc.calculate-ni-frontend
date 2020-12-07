@@ -140,17 +140,29 @@ case class Configuration(
     defs.collect { case (k,d) if d.contractedOutStandardRate.fold(true)(_ == contractedOutStandardRate) && d.trigger.interval(period, qty).contains(amount) => 
       val interval = period match {
         case Period.Year => d.year
-        case Period.Month => (d.month.getOrElse((d.year / 12)) * qty).mapBounds(_.roundUpWhole)
-        case Period.Week => (d.week.getOrElse((d.year / 52)) * qty).mapBounds(_.roundUpWhole)
-        case Period.FourWeek => (d.fourWeek.getOrElse((d.year / 13)) * qty).mapBounds(_.roundUpWhole)
+        case Period.Month => (d.month.getOrElse((d.year / 12)) * qty).mapBounds(_.readDecimal)
+        case Period.Week => (d.week.getOrElse((d.year / 52)) * qty).mapBounds(_.readDecimal)
+        case Period.FourWeek => (d.fourWeek.getOrElse((d.year / 13)) * qty).mapBounds(_.readDecimal)
       }
       val amountInBand = amount.inBand(interval)
       val employeeRate = d.employee.getOrElse(cat, BigDecimal(0))
       val employerRate = d.employer.getOrElse(cat, BigDecimal(0))
       (k,(
         amountInBand,
-        (amountInBand * employeeRate).roundHalfDown,
-        (amountInBand * employerRate).roundHalfDown
+        {
+          val amount = period match {
+            case Period.FourWeek if on.getYear() <= 1999 => ((amountInBand / 4 * employeeRate).roundNi) * 4
+            case _ => (amountInBand * employeeRate).roundNi
+          }
+          amount
+        },
+        {
+          val amount = period match {
+            case Period.FourWeek if on.getYear() <= 1999 => ((amountInBand / 4 * employerRate).roundNi) * 4
+            case _ => (amountInBand * employerRate).roundNi
+          }
+          amount
+        }
       ))
     }
   }

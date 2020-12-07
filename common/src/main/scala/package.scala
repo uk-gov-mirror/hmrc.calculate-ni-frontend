@@ -14,6 +14,33 @@ package object eoi {
     def roundUpWhole: BigDecimal =
       in.setScale(0, BigDecimal.RoundingMode.CEILING)
 
+
+    def roundNi: BigDecimal = {
+
+      if (in <= 0)
+        in.setScale(2, BigDecimal.RoundingMode.HALF_DOWN)
+      else {
+
+        val a = in * 100
+        val b = a.setScale(0, scala.math.BigDecimal.RoundingMode.FLOOR)
+
+        if ((a - b).abs >= 0.6) {
+          if (in < 0) {
+            (b - 1) / 100
+          }
+          else {
+            (b + 1) / 100
+          }
+        }
+        else {
+          b / 100
+        }
+      }
+    }
+
+    def readDecimal: BigDecimal =
+      in.setScale(2)
+
     def banded(bandHead: BigDecimal, bandTail: BigDecimal*): List[BigDecimal] = {
       val bands = bandHead :: bandTail.toList
       val deltas = (BigDecimal(0) :: bands).sliding(2).map{
