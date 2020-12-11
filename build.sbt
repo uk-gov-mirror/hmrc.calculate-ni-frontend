@@ -1,5 +1,6 @@
-import uk.gov.hmrc.DefaultBuildSettings.integrationTestSettings
+import uk.gov.hmrc.DefaultBuildSettings.{addTestReportOption, integrationTestSettings}
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
+
 import scala.sys.process._
 
 val reactDirectory           = settingKey[File]("The directory where the react application is located")
@@ -71,6 +72,7 @@ moveReact := {
 
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(play.sbt.PlayScala, SbtAutoBuildPlugin, SbtGitVersioning, SbtDistributablesPlugin)
+  .configs(AcceptanceTest)
   .settings(
     majorVersion                     := 0,
     scalaVersion                     := "2.12.11",
@@ -81,12 +83,14 @@ lazy val microservice = Project(appName, file("."))
     ),
     libraryDependencies              ++= Seq(
       "uk.gov.hmrc"             %% "bootstrap-test-play-27"   % "3.0.0",
-      "org.scalatest"           %% "scalatest"                % "3.1.2",
+      "org.scalatest"           %% "scalatest"                % "3.0.8",
       "org.jsoup"               %  "jsoup"                    % "1.10.2",
       "com.typesafe.play"       %% "play-test"                % play.core.PlayVersion.current,
+      "org.pegdown"             % "pegdown"                   % "1.6.0",
+      "uk.gov.hmrc"             %% "webdriver-factory"        % "0.12.0",
       "com.vladsch.flexmark"    %  "flexmark-all"             % "0.35.10",
       "org.scalatestplus.play"  %% "scalatestplus-play"       % "4.0.3",
-      "org.scalacheck"          %% "scalacheck"               % "1.14.1"      
+      "org.scalacheck"          %% "scalacheck"               % "1.14.1"
     ).map(_ % Test),
     TwirlKeys.templateImports ++= Seq(
       "uk.gov.hmrc.calculatenifrontend.config.AppConfig",
@@ -100,8 +104,9 @@ lazy val microservice = Project(appName, file("."))
       "com.github.ghik" % "silencer-lib" % silencerVersion % Provided cross CrossVersion.full
     ),
     PlayKeys.playDefaultPort := 8668,
-    reactDirectory := (baseDirectory in Compile) { _ /"react" }.value,    
-    dist := (dist dependsOn moveReact).value
+    reactDirectory := (baseDirectory in Compile) { _ /"react" }.value,
+    dist := (dist dependsOn moveReact).value,
+    acceptanceTestSettings
   )
   .settings(publishingSettings: _*)
   .configs(IntegrationTest)
@@ -110,13 +115,13 @@ lazy val microservice = Project(appName, file("."))
 
 val circeVersion = "0.13.0"
 
-/** common components holding the logic of the calculation */ 
+/** common components holding the logic of the calculation */
 lazy val common = sbtcrossproject.CrossPlugin.autoImport.crossProject(JSPlatform, JVMPlatform)
   .withoutSuffixFor(JVMPlatform)
   .crossType(sbtcrossproject.CrossPlugin.autoImport.CrossType.Pure)
   .settings(
     scalaVersion := "2.12.12",
-    majorVersion := 0,    
+    majorVersion := 0,
     libraryDependencies ++= Seq(
       "io.circe" %%% "circe-core",
       "io.circe" %%% "circe-generic",
@@ -140,7 +145,7 @@ lazy val common = sbtcrossproject.CrossPlugin.autoImport.crossProject(JSPlatform
 lazy val `schema-converter` = project
   .settings(
     scalaVersion := "2.12.12",
-    majorVersion := 0,        
+    majorVersion := 0,
     scalacOptions -= "-Xfatal-warnings",
     publish := {},
     publishLocal := {}
@@ -151,7 +156,7 @@ lazy val `schema-converter` = project
 lazy val calc = project.
   settings(
     scalaVersion := "2.12.12",
-    majorVersion := 0,        
+    majorVersion := 0,
     scalacOptions -= "-Xfatal-warnings",
     libraryDependencies ++= Seq(
       "com.github.pureconfig" %% "pureconfig" % "0.13.0",
@@ -169,8 +174,8 @@ lazy val `frontend` = project
   .enablePlugins(ScalaJSPlugin)
   .settings(
     scalaVersion := "2.12.12",
-    majorVersion := 0,        
-    scalacOptions -= "-Xfatal-warnings",    
+    majorVersion := 0,
+    scalacOptions -= "-Xfatal-warnings",
     scalaJSUseMainModuleInitializer := false,
     libraryDependencies ++= Seq(
       "org.scala-js" %%% "scalajs-dom" % "1.1.0",
@@ -181,3 +186,14 @@ lazy val `frontend` = project
     publishLocal := {}
   )
   .dependsOn(common.js)
+
+lazy val AcceptanceTest         = config("acceptance") extend Test
+
+lazy val acceptanceTestSettings =
+  inConfig(AcceptanceTest)(Defaults.testTasks) ++
+    Seq(
+      // The following is needed to preserve the -Dbrowser option to the HMRC webdriver factory library
+      fork in AcceptanceTest := false,
+      (testOptions in AcceptanceTest) := Seq(Tests.Filter(_ startsWith "acceptance")),
+      addTestReportOption(AcceptanceTest, "acceptance-test-reports")
+    )
