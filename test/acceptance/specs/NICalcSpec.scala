@@ -33,14 +33,11 @@
 package acceptance.specs
 
 import acceptance.pages.NiCalcPage
-import acceptance.helpers.Util
-import views.html.helper.input
-import org.openqa.selenium.{By, WebDriver}
 
 class NICalcSpec extends BaseAcceptanceSpec {
   feature("Calculator Page") {
     scenario(
-      "The user visits the calculator"
+      "The user uses the calculator"
     ) {
       Given("the user visits the page")
       go to NiCalcPage
@@ -53,9 +50,8 @@ class NICalcSpec extends BaseAcceptanceSpec {
 
       And("they submit the calculation")
       NiCalcPage.calculate
-      Thread.sleep(5000)
 
-      Then("")
+      Then("The calculations are presented")
       eventually {
 
         NiCalcPage.getGrossPay should be("£12,345.00")

@@ -17,7 +17,7 @@
 package acceptance.pages
 
 import acceptance.config.AcceptanceTestConfiguration
-import org.openqa.selenium.{By, Keys, WebDriver, WebElement}
+import org.openqa.selenium.By
 
 object NiCalcPage extends BasePage {
   val url = AcceptanceTestConfiguration.url("calculate-ni")
