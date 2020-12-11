@@ -32,7 +32,10 @@
 
 package acceptance.specs
 
-import acceptance.pages.NiCalculatorPage
+import acceptance.pages.NiCalcPage
+import acceptance.helpers.Util
+import views.html.helper.input
+import org.openqa.selenium.{By, WebDriver}
 
 class NICalcSpec extends BaseAcceptanceSpec {
   feature("Calculator Page") {
@@ -40,7 +43,43 @@ class NICalcSpec extends BaseAcceptanceSpec {
       "The user visits the calculator"
     ) {
       Given("the user visits the page")
-      go to NiCalculatorPage
+      go to NiCalcPage
+
+      When("they input their contribution payment details")
+      NiCalcPage.inputContributionDetails("Four Week", "M", 12345)
+
+      And("they input the total NI Paid")
+      NiCalcPage.inputTotals(123,123)
+
+      And("they submit the calculation")
+      NiCalcPage.calculate
+      Thread.sleep(5000)
+
+      Then("")
+      eventually {
+
+        NiCalcPage.getGrossPay should be("£12,345.00")
+
+        val netContributionsList = NiCalcPage.getNetContributions
+
+        netContributionsList(0) should be("£1,743.59")
+        netContributionsList(1) should be("£1,620.59")
+        netContributionsList(2) should be("£0.00")
+
+        val employeeContributionsList = NiCalcPage.getEmployeeContributions
+
+        employeeContributionsList(0) should be("£517.74")
+        employeeContributionsList(1) should be("£394.74")
+        employeeContributionsList(2) should be("£0.00")
+
+        val employerContributionsList = NiCalcPage.getEmployerContributions
+
+        employerContributionsList(0) should be("£1,225.85")
+        employerContributionsList(1) should be("£0.00")
+        employerContributionsList(2) should be("£1,225.85")
+        employerContributionsList(3) should be("£0.00")
+
+      }
     }
   }
 }

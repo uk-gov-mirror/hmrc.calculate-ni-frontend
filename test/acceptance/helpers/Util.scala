@@ -14,11 +14,18 @@
  * limitations under the License.
  */
 
-package acceptance.pages
+package acceptance.helpers
 
-import acceptance.config.AcceptanceTestConfiguration
+import org.openqa.selenium.{By, WebDriver}
+import org.openqa.selenium.support.ui.WebDriverWait
+import org.scalatest.concurrent.Eventually
 
-object NiCalculatorPage extends BasePage {
-  val url   = AcceptanceTestConfiguration.url("calculate-ni")
-  val title = "React App"
+case class Util() {
+
+  /*def waitUntilElementFound(driver: WebDriver, webClass: String){
+    new WebDriverWait(driver, 10000).until(
+      Eventually(driver.findElement(By.className(webClass)))
+    )
+  }*/
+
 }
