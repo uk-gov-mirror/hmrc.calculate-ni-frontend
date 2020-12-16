@@ -161,6 +161,7 @@ lazy val calc = project.
       "org.scalatest" %% "scalatest" % "3.0.1" % Test,
       "com.github.tototoshi" %% "scala-csv" % "1.3.6" % Test
     ),
+    testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-oNCXELOPQRM"),
     publish := {},
     publishLocal := {}
   ).dependsOn(common.jvm)

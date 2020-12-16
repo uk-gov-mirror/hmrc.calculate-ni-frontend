@@ -28,6 +28,7 @@ case class ClassFour(
 )
 
 
+
 /** Class 1 NICs are earnings related contributions paid by employed
   * earners and their employers. Liability starts at age 16 and ends
   * at Sate Pension age for earners; employers continue to pay beyond
@@ -91,8 +92,41 @@ case class Configuration(
   classOneAB: Map[Interval[LocalDate], BigDecimal], 
   classTwo: Map[Interval[LocalDate], ClassTwo],
   classThree: Map[Interval[LocalDate], BigDecimal],
-  classFour: Map[Interval[LocalDate], ClassFour]   
+  classFour: Map[Interval[LocalDate], ClassFour],
+  interestUnpaid: Map[LocalDate, BigDecimal],
+  interestLatePaidRefunds: Map[LocalDate, BigDecimal]
 ) {
+
+  def dateBands[A](in: Map[LocalDate, A]): Map[Interval[LocalDate], A] = {
+    val pairs: List[(LocalDate, Option[A])] = in.mapValues(Some(_)).toList.sortBy(_._1.toEpochDay)
+      (pairs :+ (LocalDate.now, None : Option[A])).sliding(2).map {
+        case (from, amt) :: (to, _) :: Nil => Interval.closed(from, to.minusDays(1)) -> amt.get
+      }.toMap
+  }
+
+  def proRataRatio(from: LocalDate, to: LocalDate): Option[BigDecimal] = {
+    import spire.math.interval._
+
+    def fromBound[A](in: Bound[A]): Option[A] = in match {
+      case Open(a) => Some(a)
+      case Closed(a) => Some(a)
+      case _ => None
+    }
+
+    def intervalSizeDays(in: Interval[LocalDate]): Option[BigDecimal] = for {
+      l <- fromBound(in.lowerBound)
+      h <- fromBound(in.upperBound)
+    } yield BigDecimal(h.toEpochDay - l.toEpochDay)
+
+    for {
+      taxYear <- classOne.keys.find(_.contains(from))
+      total <- intervalSizeDays(taxYear)
+      partial <- intervalSizeDays(Interval.closed(from, to))
+    } yield (partial / total)
+  }
+
+  lazy val interestUnpaidBands = dateBands(interestUnpaid)
+  lazy val interestLatePaidRefundsBands = dateBands(interestLatePaidRefunds)
 
   def calculateClassOneAAndB(
     on: LocalDate,
@@ -103,6 +137,7 @@ case class Configuration(
     on: LocalDate,
     numberOfWeeks: Int
   ): Option[BigDecimal] = classThree.at(on).map(_ * numberOfWeeks)
+
 
   def calculateClassFour(
     on: LocalDate,
@@ -137,7 +172,7 @@ case class Configuration(
     contractedOutStandardRate: Boolean = false
   ): Map[String,(BigDecimal, BigDecimal, BigDecimal)] = {
     val defs = classOne.at(on).getOrElse(Map.empty)
-    defs.collect { case (k,d) if d.contractedOutStandardRate.fold(true)(_ == contractedOutStandardRate) && d.trigger.interval(period, qty).contains(amount) => 
+    val bands = defs.collect { case (k,d) if d.contractedOutStandardRate.fold(true)(_ == contractedOutStandardRate) && d.trigger.interval(period, qty).contains(amount) => 
       val interval = period match {
         case Period.Year => d.year
         case Period.Month => (d.month.getOrElse((d.year / 12)) * qty).mapBounds(_.readDecimal)
@@ -164,6 +199,17 @@ case class Configuration(
           amount
         }
       ))
+    }
+
+    val (totalEE, totalER) = bands.values.foldLeft((BigDecimal(0), BigDecimal(0))){
+      case ((accEE, accER), (_, ee, er)) => (accEE + ee, accER + er)
+    }
+
+    if (totalEE < 0) {
+      // small grey area where contribution is less than rebate, the rebate is given to the employer
+      bands + ("rebateTransfer" -> (0, -totalEE, totalEE))
+    } else {
+      bands
     }
   }
 }

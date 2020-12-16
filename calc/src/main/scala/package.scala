@@ -74,8 +74,9 @@ package object calc {
   implicit val periodMapReader = anyMapReader[Interval[LocalDate], Map[String, RateDefinition]]
   implicit val classTwoReader = anyMapReader[Interval[LocalDate], ClassTwo]
   implicit val catReader = anyMapReader[Char, String]
-  implicit val dateBDReader = anyMapReader[Interval[LocalDate], BigDecimal]
-  implicit val classFourReader = anyMapReader[Interval[LocalDate], ClassFour]    
+  implicit val dateBDReader = anyMapReader[LocalDate, BigDecimal]  
+  implicit val dateIntervalBDReader = anyMapReader[Interval[LocalDate], BigDecimal]
+  implicit val classFourReader = anyMapReader[Interval[LocalDate], ClassFour]
 
   lazy val get = ConfigSource.default.load[Map[Interval[LocalDate], Map[String, RateDefinition]]] match {
     case Right(conf) => conf
