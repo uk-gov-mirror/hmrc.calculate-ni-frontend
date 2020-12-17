@@ -3,6 +3,8 @@ package eoi
 import java.time.LocalDate
 import spire.implicits._
 import spire.math.Interval
+import spire.math.interval._
+import scala.collection.immutable.ListMap
 
 case class RateDefinition(
   year: Interval[BigDecimal],
@@ -97,26 +99,31 @@ case class Configuration(
   interestLatePaidRefunds: Map[LocalDate, BigDecimal]
 ) {
 
-  def dateBands[A](in: Map[LocalDate, A]): Map[Interval[LocalDate], A] = {
+  private def dateBands[A](in: Map[LocalDate, A]): List[(Interval[LocalDate], A)] = {
     val pairs: List[(LocalDate, Option[A])] = in.mapValues(Some(_)).toList.sortBy(_._1.toEpochDay)
       (pairs :+ (LocalDate.now, None : Option[A])).sliding(2).map {
         case (from, amt) :: (to, _) :: Nil => Interval.closed(from, to.minusDays(1)) -> amt.get
-      }.toMap
+      }.toList
   }
 
+  private def fromBound[A](in: Bound[A]): Option[A] = in match {
+    case Open(a) => Some(a)
+    case Closed(a) => Some(a)
+    case _ => None
+  }
+
+
+  private def intervalSizeDays(in: Interval[LocalDate]): Option[BigDecimal] = for {
+    l <- fromBound(in.lowerBound)
+    h <- fromBound(in.upperBound)
+  } yield BigDecimal(h.toEpochDay - l.toEpochDay)
+
+
+  /** Gives the amount as a pro-rata percentage of the interval the
+    * 'from' date falls within. Returns 'None' if there is no interval
+    * the from date is within, or the interval is unbounded 
+    */
   def proRataRatio(from: LocalDate, to: LocalDate): Option[BigDecimal] = {
-    import spire.math.interval._
-
-    def fromBound[A](in: Bound[A]): Option[A] = in match {
-      case Open(a) => Some(a)
-      case Closed(a) => Some(a)
-      case _ => None
-    }
-
-    def intervalSizeDays(in: Interval[LocalDate]): Option[BigDecimal] = for {
-      l <- fromBound(in.lowerBound)
-      h <- fromBound(in.upperBound)
-    } yield BigDecimal(h.toEpochDay - l.toEpochDay)
 
     for {
       taxYear <- classOne.keys.find(_.contains(from))
@@ -127,6 +134,28 @@ case class Configuration(
 
   lazy val interestUnpaidBands = dateBands(interestUnpaid)
   lazy val interestLatePaidRefundsBands = dateBands(interestLatePaidRefunds)
+
+  def calculateInterestUnpaid(
+    dueDate: LocalDate,
+    debt: BigDecimal,
+    remissionPeriods: List[Interval[LocalDate]] = Nil,
+    endDate: LocalDate = LocalDate.now    
+  ): BigDecimal = {
+    val totalInterval = Interval.closed(dueDate,endDate)
+    val intervalRates: List[BigDecimal] = interestUnpaidBands.map { case (dateRange, annualisedRate) =>
+      val totalDays = intervalSizeDays(totalInterval).getOrElse(BigDecimal(365.25))
+      val daysOverlap: BigDecimal = intervalSizeDays(totalInterval.intersect(dateRange)).getOrElse(BigDecimal(0))
+      val rateForInterval = annualisedRate * (totalDays / 365.25)
+      rateForInterval * (daysOverlap / totalDays)
+    }
+
+    debt * intervalRates.product
+  }
+
+  def calculateInterestLatePaidRefunds(
+
+  ): BigDecimal = ???
+
 
   def calculateClassOneAAndB(
     on: LocalDate,
