@@ -142,10 +142,14 @@ case class Configuration(
     endDate: LocalDate = LocalDate.now    
   ): BigDecimal = {
     val totalInterval = Interval.closed(dueDate,endDate)
+
     val intervalRates: List[BigDecimal] = interestUnpaidBands.map { case (dateRange, annualisedRate) =>
-      val totalDays = intervalSizeDays(totalInterval).getOrElse(BigDecimal(365.25))
+      val remissionDays = remissionPeriods.map{ x => 
+        intervalSizeDays(x.intersect(dateRange)).getOrElse(BigDecimal(0))
+      }.sum
+      val totalDays = intervalSizeDays(totalInterval).getOrElse(BigDecimal("365.25")) - remissionDays
       val daysOverlap: BigDecimal = intervalSizeDays(totalInterval.intersect(dateRange)).getOrElse(BigDecimal(0))
-      val rateForInterval = annualisedRate * (totalDays / 365.25)
+      val rateForInterval = annualisedRate * (totalDays / BigDecimal("365.25"))
       rateForInterval * (daysOverlap / totalDays)
     }
 
@@ -153,8 +157,23 @@ case class Configuration(
   }
 
   def calculateInterestLatePaidRefunds(
+    taxYear: Interval[LocalDate], // this appears to not affect the calculation
+    refundAmount: BigDecimal,
+    dueDate: LocalDate,
+    noOfBankHolidays: Int = 0, // this appears to nominally INCREASE the amount owed
+    endDate: LocalDate = LocalDate.now        
+  ): BigDecimal = {
+    val totalInterval = Interval.closed(dueDate,endDate)
 
-  ): BigDecimal = ???
+    val intervalRates: List[BigDecimal] = interestLatePaidRefundsBands.map { case (dateRange, annualisedRate) =>
+      val totalDays = intervalSizeDays(totalInterval).getOrElse(BigDecimal("365.25")) + noOfBankHolidays
+      val daysOverlap: BigDecimal = intervalSizeDays(totalInterval.intersect(dateRange)).getOrElse(BigDecimal(0))
+      val rateForInterval = annualisedRate * (totalDays / BigDecimal("365.25"))
+      rateForInterval * (daysOverlap / totalDays)
+    }
+
+    refundAmount * intervalRates.product
+  }
 
 
   def calculateClassOneAAndB(
