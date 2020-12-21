@@ -1,5 +1,6 @@
 :root {
   --border-divider: #B1B4B6;
+  --dark-grey: #0b0c0c;
   --select-border: #0b0c0c;
   --input-border: #0b0c0c;
   --select-focus: blue;
@@ -9,32 +10,19 @@
   --table-body-border: #DFE3E8;
   --active-highlight-bg: #A5CFF1;
   --active-highlight-border: #979797;
+  --error: #d4351c;
+  --focus-outline: #fd0;
+  --link: #1D70B8
 }
 
 #root {
   position: relative;
 }
 
-.App {
-  margin: 0 auto;
-  max-width: 1024px;
-}
-
-.App header {
-  border-bottom: 10px solid #008670;
-  margin-bottom: 30px;
-}
-
-.App header img {
-  width: 613px;
-}
-
-
-
 button.toggle {
   background: none;
   border: none;
-  color: #1D70B8;
+  color: var(--link);
   cursor: pointer;
   padding: 0;
   float: right;
@@ -48,10 +36,21 @@ button.toggle:focus {
 .section-heading {
   color: #0B0C0C;
   font-size: 21px;
+  margin-bottom: 15px;
+}
+
+@media screen and (min-width: 760px) {
+  .section-heading {
+    margin-bottom: 0;
+  }
 }
 
 strong {
   font-weight: 700;
+}
+
+.clear {
+  overflow: hidden;
 }
 
 
@@ -64,12 +63,14 @@ strong {
   width: 100%;
 }
 
-.form-control.half {
-  width: 50%;
-}
+@media screen and (min-width: 760px) {
+  .form-control.half {
+    width: 50%;
+  }
 
-.form-control.third {
-  width: 33%;
+  .form-control.third {
+    width: 33%;
+  }
 }
 
 fieldset legend {
@@ -81,20 +82,51 @@ fieldset legend {
   font-size: 18px;
 }
 
-select {
-  /* A reset of styles, including removing the default dropdown arrow */
-  appearance: none;
-  /* Additional resets for further consistency */
-  background-color: transparent;
-  border: none;
-  padding: 0 1em 0 0;
-  margin: 0;
+.govuk-select {
+  font-family: "GDS Transport",arial,sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-weight: 400;
+  font-size: 16px;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  max-width: 100%;
+  height: 40px;
+  height: 2.5rem;
+  padding: 5px;
+  border: 2px solid #0b0c0c;
   width: 100%;
-  font-family: inherit;
-  font-size: inherit;
-  cursor: inherit;
-  line-height: inherit;
-  outline: none;
+}
+
+@media (min-width: 760px) {
+  .govuk-select {
+      font-size: 19px;
+      width: auto;
+  }
+}
+
+.govuk-select:focus {
+  outline: 3px solid #fd0;
+  outline-offset: 0;
+  -webkit-box-shadow: inset 0 0 0 2px;
+  box-shadow: inset 0 0 0 2px;
+}
+
+.govuk-label {
+  font-family: "GDS Transport",arial,sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-weight: 400;
+  font-size: 16px;
+  color: #0b0c0c;
+  display: block;
+  margin-bottom: 5px;
+}
+
+@media (min-width: 760px) {
+  .govuk-label {
+    font-size: 19px;
+  }
 }
 
 /* Select wrapping element */
@@ -111,22 +143,61 @@ select {
   width: 250px;
 }
 
+.govuk-visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  -webkit-clip-path: inset(50%) !important;
+  clip-path: inset(50%) !important;
+  border: 0 !important;
+  white-space: nowrap !important;
+}
+
 
 
 /* Container */
 .container {
   clear: both;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   justify-content: space-between;
 }
-.container.half {
-  flex-grow: 1;
-  width: 50%;
+
+@media screen and (min-width: 760px) {
+  .container {
+    clear: both;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+  }
 }
 
-.container.half + .half {
-  margin-left: 4%;
+@media screen and (min-width: 760px) {
+  .container.half {
+    flex-grow: 1;
+    width: 50%;
+  }
+  
+  .container.half + .half {
+    margin-left: 4%;
+  }
+
+  .container.third {
+    flex-grow: 1;
+    width: 33.333%;
+  }
+  
+  .container.third + .third {
+    margin-left: 4%;
+  }
+
+  .container .item + .item {
+    margin-left: 4%;
+  }
 }
 
 
@@ -134,18 +205,16 @@ select {
   flex-grow: 1;
 }
 
-.container .item + .item {
-  margin-left: 4%;
-}
-
 /* Two Col */
 .two-col {
   overflow: hidden;
 }
 
-.two-col .half {
-  float: left;
-  width: 50%;
+@media screen and (min-width: 760px) {
+  .two-col .half {
+    float: left;
+    width: 50%;
+  }
 }
 
 /* Details */
@@ -162,4 +231,17 @@ select {
 
 .nomar {
   margin: 0 !important;
+}
+
+/* Section Specific */
+/* - details */
+.details-heading {
+  display: inline-block;
+}
+
+/* Contribution Buttons */
+@media screen and (min-width: 760px) {
+  .repeat-button {
+    margin-right: 10px;
+  }
 }

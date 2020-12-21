@@ -6,11 +6,11 @@ import Totals from './Totals'
 import CategoryTotals from './CategoryTotals'
 
 // helpers
-import SummaryListRow from './helpers/SummaryListRow'
+import SummaryListRow from './helpers/gov-design-system/SummaryListRow'
 
 // types
 import { SavePrintProps } from '../interfaces'
-import ContributionsTable from './ContributionsTable'
+import ContributionsTable from './calculators/class1/Class1ContributionsTable'
 
 function SavePrint(props: SavePrintProps) {
 
@@ -20,41 +20,43 @@ function SavePrint(props: SavePrintProps) {
       .filter(onlyUnique)
   }
 
+  const notEntered = 'Not entered'
+
   return (
     <div id="save-print-wrapper">
       <div className="print-content">
-        <button type="button" onClick={() => props.setShowSummary(false)}>Close summary</button>
-        <h2 className="govuk-heading-l">Class 1 NI Assessment</h2>
+        <a href="#" className="govuk-back-link" onClick={() => props.setShowSummary(false)}>Back</a>
+        <h2 className="govuk-heading-l">Class 1 NI contributions calculation</h2>
         
         <div className="details">
           <dl className="govuk-summary-list two-col">
             <SummaryListRow 
               listKey="Prepared by:" 
-              listValue={props.details.preparedBy} 
+              listValue={props.details.preparedBy ? props.details.preparedBy : notEntered} 
               rowClasses="half"  
             />
             
             <SummaryListRow 
               listKey="Date:" 
-              listValue={props.details.date} 
+              listValue={props.details.date ? props.details.date : notEntered} 
               rowClasses="half" 
             />
 
             <SummaryListRow 
-              listKey="Full name:" 
-              listValue={props.details.fullName} 
+              listKey="Customer’s full name:" 
+              listValue={props.details.fullName ? props.details.fullName : notEntered} 
               rowClasses="half" 
             />
 
             <SummaryListRow 
               listKey="NI number:" 
-              listValue={props.details.ni} 
+              listValue={props.details.ni ? props.details.ni : notEntered} 
               rowClasses="half" 
             />
 
             <SummaryListRow 
               listKey="Reference:" 
-              listValue={props.details.reference} 
+              listValue={props.details.reference ? props.details.reference : notEntered} 
               rowClasses="half" 
             />
 
@@ -86,6 +88,7 @@ function SavePrint(props: SavePrintProps) {
         
         <h2 className="heading-sap-sm">Summary</h2>
         <Totals 
+          grossPayTally={true}
           grossTotal={props.grossTotal}
           niPaidNet={props.niPaidNet}
           setNiPaidNet={props.setNiPaidNet}
@@ -105,6 +108,9 @@ function SavePrint(props: SavePrintProps) {
         />
         
       </div>
+      <button className="button" onClick={() =>  window.print()}>
+        Save and print
+      </button>
     </div>
   )
 }

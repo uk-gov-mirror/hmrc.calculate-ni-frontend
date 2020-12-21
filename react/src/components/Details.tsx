@@ -1,85 +1,77 @@
 import React from 'react';
 
-interface DetailsProps {
-  fullName: string
-  ni: string
-  reference: string
-  preparedBy: string
-  date: string
-  handleChange: ({ currentTarget: { name, value }, }: React.ChangeEvent<HTMLInputElement>) => void
-}
+// types
+import { DetailsProps } from '../interfaces'
+
+// components
+import TextInput from './helpers/formhelpers/TextInput'
 
 function Details (props: DetailsProps) {
   return (
-    <React.Fragment>
-
+    <fieldset className="details" role="alert">
+      <legend className="float-left legend-small">Enter the details for this calculation</legend>
+      
       <div className="container">
-        <div className="form-group item">
-          <label htmlFor="fullName" className="form-label">Full name</label>
-          <input
-            type="text"
-            id="fullName"
-            name="fullName"
-            className="form-control full"
-            value={props.fullName}
-            onChange={props.handleChange}
+        <div className="container half">
+          <div className="form-group item">
+            <TextInput
+              labelText="Customer’s full name (optional)"
+              name="fullName"
+              inputClassName="form-control full"
+              inputValue={props.fullName}
+              onChangeCallback={props.handleChange}
             />
+          </div>
         </div>
         
-        <div className="form-group item">
-          <label htmlFor="ni" className="form-label">NI Number</label>
-          <input
-            type="text"
-            id="ni"
-            name="ni"
-            className="form-control half"
-            value={props.ni}
-            onChange={props.handleChange}
+        <div className="container half">
+          <div className="form-group item">
+            <TextInput
+              labelText="NI number (optional)"
+              name="ni"
+              inputClassName="form-control full"
+              inputValue={props.ni}
+              onChangeCallback={props.handleChange}
             />
+          </div>
         </div>
       </div>
 
       <div className="container">
         <div className="container half">
           <div className="form-group item">
-            <label htmlFor="ref" className="form-label">Ref</label>
-            <input
-              type="text"
-              id="reference"
+            <TextInput
+              labelText="Reference (optional)"
               name="reference"
-              className="form-control full"
-              value={props.reference}
-              onChange={props.handleChange}
-              />
+              inputClassName="form-control full"
+              inputValue={props.reference}
+              onChangeCallback={props.handleChange}
+            />
           </div>
           <div className="form-group item">
-            <label htmlFor="preparedBy" className="form-label">Prepared by</label>
-            <input
-              type="text"
-              id="preparedBy"
+            <TextInput
+              labelText="Prepared by (optional)"
               name="preparedBy"
-              className="form-control full"
-              value={props.preparedBy}
-              onChange={props.handleChange}
-              />
+              inputClassName="form-control full"
+              inputValue={props.preparedBy}
+              onChangeCallback={props.handleChange}
+            />
           </div>
         </div>
         <div className="container half">
           <div className="form-group item">
-            <label htmlFor="date" className="form-label">Date</label>
-            <input
-              type="text"
-              id="date"
+            <TextInput
+              labelText="Date (optional)"
               name="date"
-              className="form-control third"
-              value={props.date}
-              onChange={props.handleChange}
+              inputClassName="form-control full"
+              inputValue={props.date}
+              onChangeCallback={props.handleChange}
             />
           </div>
         </div>
 
       </div>
-    </React.Fragment>
+    </fieldset>
   )
 }
 

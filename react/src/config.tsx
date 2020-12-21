@@ -4,7 +4,9 @@ import moment from 'moment';
 import { Calculated } from './interfaces'
 import { TaxYear } from './interfaces'
 
-export const momentDateFormat = 'MMMM Do YYYY'
+export const momentDateFormat = 'D MMMM YYYY'
+
+export const stripSpaces = (str: string) => str.toLowerCase().split(' ').join('-')
 
 export const fcn = (str: string) => {
   switch (str) {
@@ -43,7 +45,7 @@ export const fpn = (str: string) => {
     case 'Mnth':
       return 'Monthly'
     case '4Wk':
-      return 'Four week'
+      return 'Four weekly'
   }
 }
 
