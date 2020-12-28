@@ -5,16 +5,13 @@ resolvers += "HMRC Releases" at "https://dl.bintray.com/hmrc/releases"
 
 resolvers += Resolver.typesafeRepo("releases")
 
-addSbtPlugin("uk.gov.hmrc" % "sbt-auto-build" % "2.10.0")
-
-addSbtPlugin("uk.gov.hmrc" % "sbt-git-versioning" % "2.1.0")
-
-addSbtPlugin("uk.gov.hmrc" % "sbt-distributables" % "2.0.0")
-
-addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.7.5")
-
-addSbtPlugin("org.irundaia.sbt" % "sbt-sassify" % "1.4.11")
-
-addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.33")
-
-addSbtPlugin("org.portable-scala" % "sbt-scalajs-crossproject" % "1.0.0")
+addSbtPlugin("uk.gov.hmrc"         % "sbt-auto-build"           % "2.10.0")
+addSbtPlugin("uk.gov.hmrc"         % "sbt-git-versioning"       % "2.1.0")
+addSbtPlugin("uk.gov.hmrc"         % "sbt-distributables"       % "2.0.0")
+addSbtPlugin("com.typesafe.play"   % "sbt-plugin"               % "2.7.5")
+addSbtPlugin("org.irundaia.sbt"    % "sbt-sassify"              % "1.4.11")
+addSbtPlugin("com.vmunier"         % "sbt-web-scalajs"          % "1.1.0-0.6")
+addSbtPlugin("org.scala-js"        % "sbt-scalajs"              % "0.6.33")
+addSbtPlugin("org.portable-scala"  % "sbt-scalajs-crossproject" % "1.0.0")
+addSbtPlugin("com.typesafe.sbt"    % "sbt-gzip"                 % "1.0.2")
+addSbtPlugin("com.typesafe.sbt"    % "sbt-digest"               % "1.1.4")

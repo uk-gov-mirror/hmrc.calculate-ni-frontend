@@ -3,6 +3,13 @@
 ->         /govuk-frontend          govuk.Routes
 ->         /hmrc-frontend           hmrcfrontend.Routes
 
++ nocsrf
+POST       /hybrid/classOne         uk.gov.hmrc.calculatenifrontend.controllers.HybridClassOneController.helloWorld
+GET        /hybrid/classOne         uk.gov.hmrc.calculatenifrontend.controllers.HybridClassOneController.helloWorld
+
+GET        /frontend-fastopt.js            controllers.Assets.at(path = "/public", file = "frontend-fastopt.js")
+GET        /frontend-fastopt.js.map            controllers.Assets.at(path = "/public", file = "frontend-fastopt.js.map")
+GET        /frontend-jsdeps.js            controllers.Assets.at(path = "/public", file = "frontend-jsdeps.js")
 GET        /            controllers.Assets.at(path = "/public/build", file = "index.html")
 GET        /*file            controllers.Assets.versioned(path = "/public/build", file: Asset)
 

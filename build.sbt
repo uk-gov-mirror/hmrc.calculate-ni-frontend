@@ -77,7 +77,9 @@ lazy val microservice = Project(appName, file("."))
     libraryDependencies              ++= Seq(
       "uk.gov.hmrc"             %% "bootstrap-frontend-play-27" % "3.0.0",
       "uk.gov.hmrc"             %% "play-frontend-hmrc"         % "0.21.0-play-27",
-      "uk.gov.hmrc"             %% "play-frontend-govuk"        % "0.53.0-play-27"
+      "uk.gov.hmrc"             %% "play-frontend-govuk"        % "0.53.0-play-27",
+      "com.lihaoyi"             %% "scalatags"                  % "0.8.2",
+      "com.vmunier"             %% "scalajs-scripts"            % "1.1.4"
     ),
     libraryDependencies              ++= Seq(
       "uk.gov.hmrc"             %% "bootstrap-test-play-27"   % "3.0.0",
@@ -99,6 +101,10 @@ lazy val microservice = Project(appName, file("."))
       compilerPlugin("com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full),
       "com.github.ghik" % "silencer-lib" % silencerVersion % Provided cross CrossVersion.full
     ),
+    scalaJSProjects := Seq(frontend),
+    pipelineStages in Assets := Seq(scalaJSPipeline),
+    pipelineStages := Seq(digest, gzip),
+    compile in Compile := ((compile in Compile) dependsOn scalaJSPipeline).value,
     PlayKeys.playDefaultPort := 8668,
     reactDirectory := (baseDirectory in Compile) { _ /"react" }.value,    
     dist := (dist dependsOn moveReact).value // ,
@@ -108,6 +114,7 @@ lazy val microservice = Project(appName, file("."))
   .configs(IntegrationTest)
   .settings(integrationTestSettings(): _*)
   .settings(resolvers += Resolver.jcenterRepo)
+  .dependsOn(frontend)
 
 val circeVersion = "0.13.0"
 
@@ -134,6 +141,7 @@ lazy val common = sbtcrossproject.CrossPlugin.autoImport.crossProject(JSPlatform
     publish := {},
     publishLocal := {}
   )
+  .jsConfigure(_.enablePlugins(ScalaJSWeb))
 
 /** Used to convert the HOCON configuration file into a plain JSON one
   * for consumption by the JS interface 
@@ -167,18 +175,19 @@ lazy val calc = project.
 
 /** ScalaJS calculation logic, used by the react frontend */
 lazy val `frontend` = project
-  .enablePlugins(ScalaJSPlugin)
   .settings(
     scalaVersion := "2.12.12",
     majorVersion := 0,        
-    scalacOptions -= "-Xfatal-warnings",    
-    scalaJSUseMainModuleInitializer := false,
+    // scalacOptions -= "-Xfatal-warnings",    
+    scalaJSUseMainModuleInitializer := true,
     libraryDependencies ++= Seq(
-      "org.scala-js" %%% "scalajs-dom" % "1.1.0",
-      "org.scala-js" %%% "scalajs-java-time" % "1.0.0"
+      "org.scala-js" %%% "scalajs-dom"       % "1.1.0",
+      "org.scala-js" %%% "scalajs-java-time" % "1.0.0",
+      "org.querki"   %%% "jquery-facade"     % "1.2",
+      "com.lihaoyi"  %%% "scalatags"         % "0.8.2"
     ),
-    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
-    publish := {},
-    publishLocal := {}
+//    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
+    jsDependencies += "org.webjars" % "jquery" % "2.2.1" / "jquery.js" minified "jquery.min.js",
   )
+  .enablePlugins(ScalaJSPlugin, ScalaJSWeb)
   .dependsOn(common.js)
