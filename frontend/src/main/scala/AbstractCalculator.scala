@@ -8,7 +8,34 @@ trait AbstractCalculator[Builder, FragT, Output <: FragT] {
   val bundle: Bundle[Builder, Output, FragT]
   import bundle.all._
   def render(data: Map[String, String]): Tag =
-    div(id:= topLevelId)(innerDiv(data):_*)
+    div(id:= topLevelId)(innerDiv(processData(data)):_*)
+
+  def tableHandling(in: Map[String, String]): Map[String, String] = {
+    in.get("action") match {
+      case Some("clear-table") => in.filterNot(_._1.startsWith("row"))
+      case Some(remove) =>
+        remove.split("_").toList match {
+          case ("row"::indexS::"remove"::Nil) =>
+            val index = indexS.toInt
+            in.toList.flatMap { case (k,v) =>
+              k.split("_").toList match {
+                case ("row"::rowIndex::xs) => rowIndex.toInt match {
+                  case `index` => Nil
+                  case low if low < index => List((k,v))
+                  case high if high > index => List((s"row_${high-1}_${xs.mkString("_")}", v))
+                }
+                case _ => List((k,v))
+              }
+            }.toMap
+          case _ => in
+        }
+      case _ => in
+    }
+  }
+
+  def processData(in: Map[String, String]): Map[String,String] = {
+    tableHandling(in)
+  }
 
   def innerDiv(data: Map[String, String]): List[Tag]
 

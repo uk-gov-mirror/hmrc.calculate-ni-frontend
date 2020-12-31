@@ -41,7 +41,9 @@ object BindForm {
         case (k::v::Nil) => (k,scalajs.js.URIUtils.decodeURIComponent(v.replace("+", " ")))
       }.toMap
       val data = pairs + ("action" -> action)
-      val newContent = calculator.innerDiv(data).map(_.toString).mkString("")
+      val newContent = calculator.innerDiv(
+        calculator.processData(data)
+      ).map(_.toString).mkString("")
       element.html(newContent)
     }
 

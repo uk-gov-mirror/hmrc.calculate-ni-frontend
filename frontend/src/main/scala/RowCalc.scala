@@ -13,28 +13,7 @@ case class RowCalc[Builder, FragT, Output <: FragT](
 
   val topLevelId = "rowcalc"
 
-  def innerDiv(dataBase: Map[String, String]): List[Tag] = {
-
-    val data = dataBase.get("action") match {
-      case Some("clear-table") => dataBase.filterNot(_._1.startsWith("row"))
-      case Some(remove) =>
-        remove.split("_").toList match {
-          case ("row"::indexS::"remove"::Nil) =>
-            val index = indexS.toInt
-            dataBase.toList.flatMap { case (k,v) =>
-              k.split("_").toList match {
-                case ("row"::rowIndex::xs) => rowIndex.toInt match {
-                  case `index` => Nil
-                  case low if low < index => List((k,v))
-                  case high if high > index => List((s"row_${high-1}_${xs.mkString("_")}", v))
-                }
-                case _ => List((k,v))
-              }
-            }.toMap
-          case _ => dataBase
-        }
-      case _ => dataBase
-    }
+  def innerDiv(data: Map[String, String]): List[Tag] = {
 
     val c = controls(data)
     import c._
