@@ -4,8 +4,15 @@
 ->         /hmrc-frontend           hmrcfrontend.Routes
 
 + nocsrf
-POST       /hybrid/classOne         uk.gov.hmrc.calculatenifrontend.controllers.HybridClassOneController.helloWorld
-GET        /hybrid/classOne         uk.gov.hmrc.calculatenifrontend.controllers.HybridClassOneController.helloWorld
+POST       /hybrid/classOne         uk.gov.hmrc.calculatenifrontend.controllers.HybridClassOneController.classOne
+GET        /hybrid/classOne         uk.gov.hmrc.calculatenifrontend.controllers.HybridClassOneController.classOne
+
++ nocsrf
+POST       /hybrid/latePaidInterest         uk.gov.hmrc.calculatenifrontend.controllers.HybridClassOneController.latePaidInterest
+GET        /hybrid/latePaidInterest         uk.gov.hmrc.calculatenifrontend.controllers.HybridClassOneController.latePaidInterest
+
+GET        /hybrid/config.json         uk.gov.hmrc.calculatenifrontend.controllers.HybridClassOneController.configJson
+GET        /hybrid/config         uk.gov.hmrc.calculatenifrontend.controllers.HybridClassOneController.configHocon
 
 GET        /frontend-fastopt.js            controllers.Assets.at(path = "/public", file = "frontend-fastopt.js")
 GET        /frontend-fastopt.js.map            controllers.Assets.at(path = "/public", file = "frontend-fastopt.js.map")

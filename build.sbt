@@ -79,7 +79,8 @@ lazy val microservice = Project(appName, file("."))
       "uk.gov.hmrc"             %% "play-frontend-hmrc"         % "0.21.0-play-27",
       "uk.gov.hmrc"             %% "play-frontend-govuk"        % "0.53.0-play-27",
       "com.lihaoyi"             %% "scalatags"                  % "0.8.2",
-      "com.vmunier"             %% "scalajs-scripts"            % "1.1.4"
+      "com.vmunier"             %% "scalajs-scripts"            % "1.1.4",
+      "com.github.pureconfig"   %% "pureconfig"                 % "0.13.0"
     ),
     libraryDependencies              ++= Seq(
       "uk.gov.hmrc"             %% "bootstrap-test-play-27"   % "3.0.0",
