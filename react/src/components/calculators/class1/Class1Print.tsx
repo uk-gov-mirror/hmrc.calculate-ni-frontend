@@ -73,8 +73,6 @@ function Class1Print(props: ClassOnePrint) {
         </div>
 
         <ClassOneEarningsTable
-          rows={rows}
-          taxYear={props.taxYear}
           showBands={true}
         />
         

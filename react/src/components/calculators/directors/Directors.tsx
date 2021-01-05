@@ -1,66 +1,54 @@
-import React, {useState} from 'react'
-import {RowsErrors, GenericErrors, validateDirectorsPayload} from '../../../validation/validation'
+import React, {useContext, useState} from 'react'
+import {validateDirectorsPayload} from '../../../validation/validation'
 import configuration from '../../../configuration.json'
 import {ClassOne} from '../../../calculation'
-import {PeriodLabel, PeriodValue, taxYearsCategories, taxYearString} from '../../../config'
+import {PeriodLabel, PeriodValue, taxYearString} from '../../../config'
 
 // components
 import Details from '../../Details'
 import DirectorsTable from '../directors/DirectorsTable'
 import Totals from '../../Totals'
 import ErrorSummary from '../../helpers/gov-design-system/ErrorSummary'
-import {updateRowInResults} from "../../../services/utils";
+import {updateDirectorsRowInResults} from "../../../services/utils";
 import DirectorsPrintView from "./DirectorsPrintView";
+import {DirectorsContext, defaultRows} from "../../../services/DirectorsContext";
 
 // types
 import {
   Calculated,
   DirectorsRow,
-  DirectorsS,
   GovDateRange,
-  TaxYear
 } from '../../../interfaces'
 
 const pageTitle = 'Directors’ contributions'
 
 function Directors() {
-  console.log('render directors')
-  const initialState = {
-    fullName: '',
-    ni: '',
-    reference: '',
-    preparedBy: '',
-    date: ''
-  }
-  const stateReducer = (state: DirectorsS, action: { [x: string]: string }) => ({
-    ...state,
-    ...action,
-  })
-  const [state, dispatch] = React.useReducer(stateReducer, initialState)
-  const [earningsPeriod, setEarningsPeriod] = useState<PeriodLabel | null>(null)
-  const [errors, setErrors] = useState<GenericErrors>({})
-  const [rowsErrors, setRowsErrors] = useState<RowsErrors>({})
   const [reset, setReset] = useState<boolean>(false)
-  const defaultRows: Array<DirectorsRow> = [{
-    id: 'directorsInput',
-    category: taxYearsCategories[0].categories[0],
-    gross: '',
-    ee: '0',
-    er: '0'
-  }]
+  const {
+    setDetails,
+    rowsErrors,
+    setRowsErrors,
+    rows,
+    taxYear,
+    setTaxYear,
+    setRows,
+    details,
+    grossTotal,
+    earningsPeriod,
+    setEarningsPeriod,
+    errors,
+    setErrors
+  } = useContext(DirectorsContext)
 
   const [calculatedRows, setCalculatedRows] = useState<Array<Calculated>>([])
   const [showSummary, setShowSummary] = useState<boolean>(false)
   const [showDetails, setShowDetails] = useState(false)
-  const [taxYear, setTaxYear] = useState<TaxYear>(taxYearsCategories[0])
-  const [rows, setRows] = useState<Array<DirectorsRow>>(defaultRows)
-  const [grossTotal, setGrossTotal] = useState<Number | null>(null)
   const [dateRange, setDateRange] = useState<GovDateRange>({from: null, to: null})
 
   const handleChange = ({
     currentTarget: { name, value },
   }: React.ChangeEvent<HTMLInputElement>) => {
-    dispatch({ [name]: value })
+    setDetails({ [name]: value })
   }
 
   const handleSubmit = (event: React.FormEvent) => {
@@ -85,10 +73,6 @@ function Directors() {
   const calculateRows = (rows: Array<DirectorsRow>, taxYear: Date) => {
     const classOneCalculator = new ClassOne(JSON.stringify(configuration));
 
-    setGrossTotal(rows.reduce((grossTotal, nextRow) => {
-      return grossTotal + parseInt(nextRow.gross)
-    }, 0))
-
     return rows.map((row: DirectorsRow, index: number) => {
         let calculatedRow: Calculated;
         if (earningsPeriod === PeriodLabel.ANNUAL) {
@@ -112,7 +96,7 @@ function Directors() {
             ))
         }
 
-        setRows(prevState => updateRowInResults(prevState, calculatedRow, index))
+        setRows(updateDirectorsRowInResults(rows, calculatedRow, index))
 
         return calculatedRow
       }) as Calculated[]
@@ -129,7 +113,6 @@ function Directors() {
     setRows(defaultRows)
     setCalculatedRows([])
     setReset(true)
-    setGrossTotal(0)
   }
 
   return (
@@ -138,7 +121,7 @@ function Directors() {
         <DirectorsPrintView
           title={pageTitle}
           setShowSummary={setShowSummary}
-          details={state}
+          details={details}
           taxYearString={taxYearString(taxYear)}
           taxYear={taxYear}
           earningsPeriod={earningsPeriod}
@@ -170,11 +153,7 @@ function Directors() {
 
           {showDetails &&
             <Details
-              fullName={state.fullName}
-              ni={state.ni}
-              reference={state.reference}
-              preparedBy={state.preparedBy}
-              date={state.date}
+              details={details}
               handleChange={handleChange}
             />
           }

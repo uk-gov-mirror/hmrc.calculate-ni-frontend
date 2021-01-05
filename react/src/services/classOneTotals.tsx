@@ -1,10 +1,10 @@
-import {useEffect, useState} from 'react';
+import {useContext, useEffect, useState} from 'react';
 import {emptyStringToZero, overUnderPaymentDisplay} from "./utils";
 import {OverOrUnder} from "../interfaces";
+import {ClassOneContext} from "./ClassOneContext";
 
 export const useClassOneTotals = () => {
-  const [niPaidNet, setNiPaidNet] = useState<string>('0')
-  const [niPaidEmployee, setNiPaidEmployee] = useState<string>('0')
+  const { niPaidNet, setNiPaidNet, niPaidEmployee, setNiPaidEmployee} = useContext(ClassOneContext)
   const [niPaidEmployer, setNiPaidEmployer] = useState<number>(0)
   const [netContributionsTotal, setNetContributionsTotal] = useState<number>(0)
   const [employeeContributionsTotal, setEmployeeContributionsTotal] = useState<number>(0)
@@ -45,10 +45,6 @@ export const useClassOneTotals = () => {
 
   return {
     resetNiPaid,
-    niPaidNet,
-    setNiPaidNet,
-    niPaidEmployee,
-    setNiPaidEmployee,
     niPaidEmployer,
     setNiPaidEmployer,
     netContributionsTotal,

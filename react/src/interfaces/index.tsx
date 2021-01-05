@@ -17,13 +17,17 @@ export interface PhaseBannerProps {
   link: string
 }
 
+export interface DetailsForm {
+  details: DetailsProps
+  handleChange: ({ currentTarget: { name, value }, }: React.ChangeEvent<HTMLInputElement>) => void
+}
+
 export interface DetailsProps {
   fullName: string
   ni: string
   reference: string
   preparedBy: string
   date: string
-  handleChange: ({ currentTarget: { name, value }, }: React.ChangeEvent<HTMLInputElement>) => void
 }
 
 export interface Class1S {
@@ -80,14 +84,13 @@ export interface TaxYear {
 }
 
 export interface Class1TableProps {
-  rows: Row[]
-  setRows: (r: Row[]) => void
-  errors: object
-  rowsErrors: ErrorSummaryProps['rowsErrors']
   resetTotals: () => void
-  setTaxYear: (ty: TaxYear) => void
-  taxYear: TaxYear
-  setShowSummary: (v: boolean) => void
+}
+
+export interface Class1ResultsProps {
+  resetTotals: () => void
+  setShowSummary: (showSummary: boolean) => void
+  handleEdit: (event: React.FormEvent<Element>) => void
 }
 
 export interface DirectorsTableProps {

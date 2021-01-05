@@ -8,14 +8,20 @@ export function sumOfContributionsInRow(calculatedRow: Calculated, type: number)
   }, 0)
 }
 
-export function addResultsToRow(row: Row | DirectorsRow, calculatedRow: any) {
+export function addResultsToRow(row: any, calculatedRow: any) {
   row.ee = sumOfContributionsInRow(calculatedRow, 1).toString()
   row.er = sumOfContributionsInRow(calculatedRow, 2).toString()
   row.bands = calculatedRow
   return row
 }
 
-export function updateRowInResults(rows: Array<any>, calculatedRow: any, index: number) {
+export function updateRowInResults(rows: Array<Row>, calculatedRow: any, index: number) {
+  const newRows = [...rows]
+  newRows[index] = addResultsToRow(newRows[index], calculatedRow)
+  return newRows;
+}
+
+export function updateDirectorsRowInResults(rows: Array<DirectorsRow>, calculatedRow: any, index: number) {
   const newRows = [...rows]
   newRows[index] = addResultsToRow(newRows[index], calculatedRow)
   return newRows;

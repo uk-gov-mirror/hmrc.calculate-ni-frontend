@@ -3,9 +3,12 @@ import Validator from 'validator';
 // types
 import {DirectorsRow, GovDateRange, Row} from '../interfaces'
 import {PeriodLabel} from "../config";
+import {Dispatch} from "react";
 
 interface ClassOnePayload {
-  rows: Array<Row>
+  rows: Array<Row>,
+  niPaidNet: string
+  niPaidEmployee: string
 }
 
 interface DirectorsPayload {
@@ -46,12 +49,34 @@ export interface RowsErrors {
   }
 }
 
-export const validateClassOnePayload = (payload: ClassOnePayload, setRowsErrors: (rowsErrors: RowsErrors) => void) => {
+export const validateClassOnePayload = (
+  payload: ClassOnePayload,
+  setRowsErrors: Dispatch<RowsErrors>,
+  setErrors: Dispatch<GenericErrors>
+) => {
+  let errors: GenericErrors = {}
+  if(payload.niPaidNet === '') {
+    errors.niPaidNet = {
+      link: 'niPaidNet',
+      name: 'Net NI paid',
+      message: 'NI paid net contributions must be entered'
+    }
+  }
+  if(payload.niPaidEmployee === '') {
+    errors.niPaidEmployee = {
+      link: 'niPaidEmployee',
+      name: 'Net NI paid by employee',
+      message: 'NI paid employee contributions must be entered'
+    }
+  }
+  if(Object.keys(errors).length > 0) {
+    setErrors(errors)
+  }
   const rowErrors: RowsErrors = validateRows(payload.rows)
   if(Object.keys(rowErrors).length > 0) {
     setRowsErrors(rowErrors)
   }
-  return Object.keys(rowErrors).length === 0
+  return Object.keys(rowErrors).length === 0 && Object.keys(errors).length === 0
 }
 
 export const validateDirectorsPayload = (
