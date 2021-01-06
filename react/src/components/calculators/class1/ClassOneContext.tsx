@@ -1,8 +1,8 @@
 import React, {Dispatch, useEffect, useState} from "react";
-import {Class1S, DetailsProps, Row, TaxYear} from "../interfaces";
-import {periods, taxYearsCategories} from "../config";
+import {Class1S, DetailsProps, Row, TaxYear} from "../../../interfaces";
+import {periods, taxYearsCategories} from "../../../config";
 import uniqid from "uniqid";
-import {GenericErrors, RowsErrors} from "../validation/validation";
+import {GenericErrors, RowsErrors} from "../../../validation/validation";
 
 const initialState = {
   fullName: '',

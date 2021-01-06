@@ -8,7 +8,7 @@ import {Row} from '../../../interfaces'
 
 import numeral from 'numeral'
 import 'numeral/locales/en-gb';
-import {ClassOneContext} from "../../../services/ClassOneContext";
+import {ClassOneContext} from "./ClassOneContext";
 
 numeral.locale('en-gb');
 
@@ -46,7 +46,7 @@ function ClassOneContributionsTable(props: {showBands: boolean}) {
       <tbody>
         {rows.map((r: Row) => (
           <tr key={r.id}>
-            <td className="input">
+            <td>
               <div>{periodValueToLabel(r.period)}</div>
             </td>
 

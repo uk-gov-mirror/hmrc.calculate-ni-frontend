@@ -11,7 +11,7 @@ export default function CurrencyInput(props: any) {
       <div className="govuk-input__wrapper">
         <div className="govuk-input__prefix" aria-hidden="true">£</div>
         <input
-          className={`govuk-input govuk-!-width-one-quarter${error ? ` govuk-input--error`: ``}`}
+          className={`govuk-input govuk-input--width-5${error ? ` govuk-input--error`: ``}`}
           id={id}
           name={id}
           type="text"

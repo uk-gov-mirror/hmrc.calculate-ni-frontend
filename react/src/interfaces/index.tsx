@@ -1,7 +1,7 @@
 // App
 
 import {PeriodLabel, PeriodValue} from "../config";
-import {RowsErrors, GenericErrors} from "../validation/validation";
+import {RowsErrors, GenericErrors, ErrorMessage} from "../validation/validation";
 
 export interface RouteName {
   pathname: string
@@ -90,7 +90,6 @@ export interface Class1TableProps {
 export interface Class1ResultsProps {
   resetTotals: () => void
   setShowSummary: (showSummary: boolean) => void
-  handleEdit: (event: React.FormEvent<Element>) => void
 }
 
 export interface DirectorsTableProps {
@@ -186,6 +185,7 @@ export interface  SummaryListRowProps {
 }
 
 export interface TextInputProps {
+  error?: ErrorMessage | undefined
   labelText: string
   labelClass?: string
   hiddenLabel?: boolean 

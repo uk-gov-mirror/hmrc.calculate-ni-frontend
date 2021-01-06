@@ -22,8 +22,8 @@ import Home from './components/Home'
 import Class1 from './components/calculators/class1/Class1'
 import Directors from './components/calculators/directors/Directors'
 import BreadCrumbs from "./components/helpers/gov-design-system/BreadCrumbs";
-import {ClassOneContext, useClassOneForm} from "./services/ClassOneContext";
-import {DirectorsContext, useDirectorsForm} from "./services/DirectorsContext";
+import {ClassOneContext, useClassOneForm} from "./components/calculators/class1/ClassOneContext";
+import {DirectorsContext, useDirectorsForm} from "./components/calculators/directors/DirectorsContext";
 
 function App() {    
   const serviceName = "Calculate National Insurance contributions"

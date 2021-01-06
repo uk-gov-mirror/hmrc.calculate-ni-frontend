@@ -2,6 +2,7 @@ import React from 'react'
 import { TextInputProps } from '../../../interfaces'
 
 function TextInput(props: TextInputProps) {
+  const { error } = props
   return (
     <>
       <label 
@@ -13,6 +14,7 @@ function TextInput(props: TextInputProps) {
         htmlFor={props.name}>
           {props.labelText}
       </label>
+      {error && <span className='govuk-error-message' id="niPaidNet-error">{error?.message}</span>}
       <input
         className={props.inputClassName}
         name={props.name}

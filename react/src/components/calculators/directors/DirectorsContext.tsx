@@ -1,7 +1,7 @@
 import React, {Dispatch, useEffect, useState} from "react";
-import {Class1S, DetailsProps, DirectorsRow, TaxYear} from "../interfaces";
-import {PeriodLabel, taxYearsCategories} from "../config";
-import {GenericErrors, RowsErrors} from "../validation/validation";
+import {Class1S, DetailsProps, DirectorsRow, TaxYear} from "../../../interfaces";
+import {PeriodLabel, taxYearsCategories} from "../../../config";
+import {GenericErrors, RowsErrors} from "../../../validation/validation";
 const initialState = {
   fullName: '',
   ni: '',

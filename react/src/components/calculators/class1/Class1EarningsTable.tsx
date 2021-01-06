@@ -9,7 +9,7 @@ import TextInput from '../../helpers/formhelpers/TextInput'
 
 import numeral from 'numeral'
 import 'numeral/locales/en-gb';
-import {ClassOneContext} from "../../../services/ClassOneContext";
+import {ClassOneContext} from "./ClassOneContext";
 
 numeral.locale('en-gb');
 

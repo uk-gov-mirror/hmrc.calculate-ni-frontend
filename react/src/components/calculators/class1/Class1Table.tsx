@@ -9,7 +9,7 @@ import ClassOneEarningsTable from './Class1EarningsTable'
 
 // types
 import { Row, Class1TableProps, TaxYear } from '../../../interfaces';
-import {ClassOneContext} from "../../../services/ClassOneContext";
+import {ClassOneContext} from "./ClassOneContext";
 
 numeral.locale('en-gb');
 
@@ -93,14 +93,15 @@ function Class1Table(props: Class1TableProps) {
               Repeat row
             </button>
           </div>
-
-          <div className="form-group">
-            <button className="button govuk-button govuk-button--secondary nomar" onClick={(e) => {
-              e.preventDefault()
-              props.resetTotals()
-            }}>
-              Clear table
-            </button>
+          <div className="container">
+            <div className="form-group">
+              <button className="button govuk-button govuk-button--secondary nomar" onClick={(e) => {
+                e.preventDefault()
+                props.resetTotals()
+              }}>
+                Clear table
+              </button>
+            </div>
           </div>
         </div>
       </div>

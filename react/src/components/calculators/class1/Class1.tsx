@@ -18,7 +18,7 @@ import ErrorSummary from '../../helpers/gov-design-system/ErrorSummary'
 // utils
 import { updateRowInResults } from "../../../services/utils";
 import ClassOneForm from "./ClassOneForm";
-import {ClassOneContext, defaultRows} from "../../../services/ClassOneContext";
+import {ClassOneContext, defaultRows} from "./ClassOneContext";
 import Class1ResultsTable from "./Class1ResultsTable";
 import {useClassOneTotals} from "../../../services/classOneTotals";
 
@@ -69,6 +69,8 @@ function Class1() {
 
   const handleEdit = (event: React.FormEvent) => {
     event.preventDefault()
+    setErrors({})
+    setRowsErrors({})
     setCalculatedRows([])
   }
 
@@ -77,7 +79,8 @@ function Class1() {
     setRowsErrors({})
     setRows(defaultRows)
     setCalculatedRows([])
-    setReset(true)
+    setNiPaidEmployee('')
+    setNiPaidNet('')
   }
 
   const calculateRows = (rows: Row[], taxYear: Date) => {
@@ -127,10 +130,10 @@ function Class1() {
             :
             <>
               <h1>{pageTitle}</h1>
+              <h2>Calculation results</h2>
               <Class1ResultsTable
                 resetTotals={resetTotals}
                 setShowSummary={setShowSummary}
-                handleEdit={handleEdit}
               />
             </>
           }
@@ -142,11 +145,30 @@ function Class1() {
             reset={reset}
             setReset={setReset}
           />
-          {showSummary &&
+          {showSummary ?
             <div className="govuk-!-padding-bottom-9">
               <button className="button" onClick={() => window.print()}>
                 Save and print
               </button>
+            </div>
+            :
+            <div className="container">
+              <div className="form-group half">
+                <button
+                  className="govuk-button govuk-button--secondary"
+                  onClick={handleEdit}
+                >
+                  Change inputs
+                </button>
+              </div>
+              <div className="form-group half">
+                <button
+                  type="button"
+                  className="button govuk-button govuk-button--secondary nomar"
+                  onClick={() => setShowSummary(true)}>
+                  Save and print
+                </button>
+              </div>
             </div>
           }
         </>

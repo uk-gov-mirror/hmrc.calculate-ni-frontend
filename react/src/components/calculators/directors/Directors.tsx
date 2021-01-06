@@ -11,7 +11,7 @@ import Totals from '../../Totals'
 import ErrorSummary from '../../helpers/gov-design-system/ErrorSummary'
 import {updateDirectorsRowInResults} from "../../../services/utils";
 import DirectorsPrintView from "./DirectorsPrintView";
-import {DirectorsContext, defaultRows} from "../../../services/DirectorsContext";
+import {DirectorsContext, defaultRows} from "./DirectorsContext";
 
 // types
 import {

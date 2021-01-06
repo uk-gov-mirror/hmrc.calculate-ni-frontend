@@ -8,7 +8,7 @@ import { TotalsProps } from '../interfaces'
 // services
 import {calculateNiDue} from "../services/utils";
 import {useClassOneTotals} from "../services/classOneTotals";
-import {ClassOneContext} from "../services/ClassOneContext";
+import {ClassOneContext} from "./calculators/class1/ClassOneContext";
 
 numeral.locale('en-gb');
 

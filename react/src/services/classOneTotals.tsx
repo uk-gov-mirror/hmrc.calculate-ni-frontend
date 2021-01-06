@@ -1,7 +1,7 @@
 import {useContext, useEffect, useState} from 'react';
 import {emptyStringToZero, overUnderPaymentDisplay} from "./utils";
 import {OverOrUnder} from "../interfaces";
-import {ClassOneContext} from "./ClassOneContext";
+import {ClassOneContext} from "../components/calculators/class1/ClassOneContext";
 
 export const useClassOneTotals = () => {
   const { niPaidNet, setNiPaidNet, niPaidEmployee, setNiPaidEmployee} = useContext(ClassOneContext)
