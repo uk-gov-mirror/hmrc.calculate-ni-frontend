@@ -13,9 +13,8 @@ case class RowCalc[Builder, FragT, Output <: FragT](
 
   val topLevelId = "rowcalc"
 
-  def innerDiv(data: Map[String, String]): List[Tag] = {
+  def innerDiv(c: Components): List[Tag] = {
 
-    val c = controls(data)
     import c._
 
     val taxYearSelector = {
@@ -31,12 +30,6 @@ case class RowCalc[Builder, FragT, Output <: FragT](
     val taxYear = taxYearSelector.getValue.getOrElse(
       throw new IllegalStateException("no tax year found")
     )
-
-    val existingRows: Int = (1 :: data.keys.toList.map(_.split("_").toList).collect {
-      case "row" :: x :: _ => x.toInt
-    }).max
-
-    val numRows: Int = if (data.get("action") == Some("add-row")) existingRows + 1 else existingRows
 
     def taxYearSelectorBlock: Tag = {
         
@@ -55,26 +48,19 @@ case class RowCalc[Builder, FragT, Output <: FragT](
 
     val (contributionTable: Tag, totals: Option[(BigDecimal, BigDecimal, BigDecimal)]) = {
 
-      def row(rowNum: Int): (Tag, Option[(BigDecimal, BigDecimal, BigDecimal)]) = {
+      def row(c: Components, index: Int): (Tag, Option[(BigDecimal, BigDecimal, BigDecimal)]) = {
         val categorySelector =
-          SelectField(s"row_${rowNum}_category")("ABCJHMNZX".toList.map {
+          c.SelectField("category")("ABCJHMNZX".toList.map {
             x => (x.toString, x.toString)
           }:_*)
 
-        val periodSelector = SelectField(s"row_${rowNum}_period")(
+        val periodSelector = c.SelectField("period")(
           "Wk" -> "Wk",
           "Mnth" -> "Mnth",
           "4Wk" -> "4Wk"
         )
 
-        val amountField = TextField[BigDecimal](
-          s"row_${rowNum}_grosspay",
-          {
-            case "" => BigDecimal(0).some
-            case entry: String => Either.catchOnly[NumberFormatException]{
-              BigDecimal(entry)
-            }.toOption}
-        )
+        val amountField = c.NumericField(s"grosspay")
 
         val results = for {
           start <- taxYear.lowerValue
@@ -98,18 +84,18 @@ case class RowCalc[Builder, FragT, Output <: FragT](
 
         val cat = categorySelector.getValue
 
-        (tr(cls:={if(rowNum == 1)"active" else ""})(
-          td(rowNum),
+        (tr(
+          td(index + 1),
           td(periodSelector),
           td(categorySelector),
           td("£", amountField),
           td(results.map(_._1)),
           td(results.map(_._2)),
-          td(actionButton(s"row_${rowNum}_remove", "Remove", true))
+          td(c.actionButton(s"remove", "Remove", true))
         ), results)
       }
 
-      val computed = (1 to numRows).map(row).toList
+      val computed = tableComponents.zipWithIndex.map{case (c,i) => row(c,i)}
       val rowTags = computed.map(_._1)
 
       val tag = table(cls:="contribution-details table-wrapper")(
@@ -136,19 +122,10 @@ case class RowCalc[Builder, FragT, Output <: FragT](
       (tag, computed.map(_._2).combineAll)
     }
 
-    def textField(fieldName: String): Tag =
-      input(name:= fieldName, value:= data.get(fieldName).getOrElse(""))
-
-    def row(rowNum: Int): Tag = tr(
-      th(rowNum),
-      td(textField(s"row_${rowNum}_input")),
-      td(actionButton("addrow","add"), actionButton(s"deleteRow_${rowNum}", "remove"))
-    )
-
     val oddButtons: Tag =
       div(cls:="container")(
         div(cls:="container")(
-          div(cls:="form-group subsection")(actionButton("add-row", "Repeat Row", true)),
+          div(cls:="form-group subsection")(actionButton("duplicate-row_last", "Repeat Row", true)),
           div(cls:="form-group subsection")(actionButton("clear-table", "Clear Table", true))
         ),
         div(cls:="container")(
@@ -156,26 +133,10 @@ case class RowCalc[Builder, FragT, Output <: FragT](
         )
       )
 
-
     val totalsSummary: Tag = {
 
-      val netContributionsField = TextField(
-        "net-contributions",
-        {
-          case "" => BigDecimal(0).some
-          case entry: String => Either.catchOnly[NumberFormatException]{
-            BigDecimal(entry)
-          }.toOption}
-      )
-
-      val employeeContributionsField = TextField(
-        "employee-contributions",
-        {
-          case "" => BigDecimal(0).some
-          case entry: String => Either.catchOnly[NumberFormatException]{
-            BigDecimal(entry)
-          }.toOption}
-      )
+      val netContributionsField = NumericField("net-contributions")
+      val employeeContributionsField = NumericField("employee-contributions")
 
       val employerPaid = (
         netContributionsField.getValue.toOption,

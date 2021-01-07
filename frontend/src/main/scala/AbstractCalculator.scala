@@ -4,66 +4,117 @@ import scalatags.generic._
 import cats.implicits._
 
 trait AbstractCalculator[Builder, FragT, Output <: FragT] {
+
   val topLevelId: String
   val bundle: Bundle[Builder, Output, FragT]
   import bundle.all._
   def render(data: Map[String, String]): Tag =
-    div(id:= topLevelId)(innerDiv(processData(data)):_*)
+    div(id:= topLevelId)(innerDiv{
+      val dataFormatted = data.map {
+        case (k,v) => (k.split("_").toList, v)
+      }
+      Components(dataFormatted, action = data.get("action").fold(List.empty[String])(_.split("_").toList))
+    }:_*)
 
-  def tableHandling(in: Map[String, String]): Map[String, String] = {
-    in.get("action") match {
-      case Some("clear-table") => in.filterNot(_._1.startsWith("row"))
-      case Some(remove) =>
-        remove.split("_").toList match {
-          case ("row"::indexS::"remove"::Nil) =>
-            val index = indexS.toInt
-            in.toList.flatMap { case (k,v) =>
-              k.split("_").toList match {
-                case ("row"::rowIndex::xs) => rowIndex.toInt match {
-                  case `index` => Nil
-                  case low if low < index => List((k,v))
-                  case high if high > index => List((s"row_${high-1}_${xs.mkString("_")}", v))
-                }
-                case _ => List((k,v))
-              }
-            }.toMap
-          case _ => in
+
+  def innerDiv(components: Components): List[Tag]
+
+  trait Field[A] {
+    def render: Tag
+    def getValue: Either[String, A]
+
+    def andThen[B](f: A => Either[String, B]): Field[B] = {
+      val that = this;
+      new Field[B] {
+        def render(): Tag = that.render()
+        def getValue: Either[String, B] = that.getValue flatMap f
+      }
+    }
+
+    def map[B](f: A => B): Field[B] = andThen(x => Right(f(x)))
+    def disallowing(f: PartialFunction[A, String]): Field[A] = {
+      andThen{ x => 
+        f.lift(x) match {
+          case None => Right(x)
+          case Some(err) => Left(err)
         }
-      case _ => in
+      }
     }
   }
 
-  def processData(in: Map[String, String]): Map[String,String] = {
-    tableHandling(in)
-  }
+  implicit def autoRender[A](in: Field[A]): Tag = in.render()
+  implicit def optBigDecimalToTag(in: Option[BigDecimal]) =
+    raw(in.fold("-")(_.toDouble.formatted("£%,.2f")))
 
-  def innerDiv(data: Map[String, String]): List[Tag]
+  case class Components(
+    dataPreTableLogic: Map[List[String], String],
+    path: List[String] = Nil,
+    action: List[String] = Nil,
+  ) {
 
-  def actionButton(actionName: String, label: String, secondary: Boolean = false): Tag = 
-    button(name:="action", cls:= s"button govuk-button ${if (secondary) "govuk-button--secondary" else ""} nomar", value:=actionName)(label)
 
-  case class controls(dataIn: Map[String, String]) {
-
-    trait Field[A] {
-      def render: Tag
-      def getValue: Either[String, A]
+    val (tableData, nonTableData) = dataPreTableLogic.partition{
+      case (("row"::_), _) => true
+      case _ => false
     }
 
-    implicit def autoRender[A](in: Field[A]): Tag = in.render()
+    val tableRows: List[Map[List[String], String]] = {
+      object IntP {
+        def unapply(in: String): Option[Int] =
+          Either.catchOnly[NumberFormatException](in.toInt).toOption
+      }
 
-    case class SelectField[A](fieldName: String)(options: (String,A)*) extends Field[A] {
+      val baseRows: List[Map[List[String], String]] = dataPreTableLogic.foldLeft(
+        Map.empty[Int,Map[List[String],String]]
+      ){
+        case (existing, (atPath::IntP(i)::xs,v)) =>
+          val newKey = xs
+          existing.get(i) match {
+            case Some(entry) => existing + (i -> (entry + (newKey -> v)))
+            case None => existing + (i -> Map(newKey -> v))
+          }
+        case (existing,_) => existing
+      }.toList.sortBy(_._1).map(_._2)
+
+      action match {
+        case  "clear-table" :: Nil => Nil
+        case ("row"::IntP(index)::"remove"::Nil) => baseRows.take(index) ++ baseRows.drop(index + 1)
+        case "add-row" :: Nil => baseRows :+ Map.empty[List[String], String]
+        case "duplicate-row" :: "last" :: Nil => baseRows ++ baseRows.lastOption.toList
+        case "duplicate-row" :: IntP(index) :: Nil => baseRows :+ baseRows(index)
+        case _ => baseRows
+      }
+    }
+
+    val nonEmptyTableRows: List[Map[List[String], String]] =
+      if (tableRows.isEmpty) (Map.empty[List[String], String] :: Nil) else tableRows
+
+    lazy val tableComponents: List[Components] = nonEmptyTableRows.zipWithIndex.map{ case (d,i) => 
+      Components(
+        d,
+        path ++ ("row" :: i.toString() :: Nil),
+        action
+      )
+    }
+
+    val data = tableRows.zipWithIndex.flatMap {case (m,i) =>
+      m.map{case (k,v) => ("row" :: i.toString :: k, v)}
+    }.toMap ++ nonTableData
+
+    case class SelectField[A](fieldName: String*)(options: (String,A)*) extends Field[A] {
+      val fullPath = path ++ fieldName.toList      
       def render(): Tag = {
         val o = options.toList.map { case (k,v) =>
-          if (dataIn.get(fieldName) == Some(k))
+          if (data.get(fieldName.toList) == Some(k))
             option(value:=k, selected)(v.toString)
           else
             option(value:=k)(v.toString)
         }
-        select(name:=fieldName)(o:_*)
+        select(name:=fullPath.mkString("_"))(o:_*)
       }
 
       def getValue: Either[String, A] = {
-        val textValue = dataIn.get(fieldName)
+        val textValue = data.get(fieldName.toList)
         textValue match {
           case None => Right(options.head._2)
           case Some(entry) =>
@@ -73,25 +124,56 @@ trait AbstractCalculator[Builder, FragT, Output <: FragT] {
       }
     }
 
-    case class TextField[A](
-      fieldName: String,
-      transform: String => Option[A] = {x: String => Some(x)}
-    ) extends Field[A] {
-      def render(): Tag =
-        input(name:= fieldName, value:= dataIn.get(fieldName).getOrElse(""))
-
-      def getValue: Either[String, A] = {
-        val plainText = dataIn.getOrElse(fieldName, "")
-        Either.fromOption(
-          transform(plainText),
-          plainText
+    object SelectField {
+      def fromIterable[A](fieldName: String)(options: Iterable[A]): SelectField[A] =
+        SelectField(fieldName) (
+          options.toList.zipWithIndex.map{case (x,i) => i.toString -> x} :_*
         )
-      }
     }
+
+    case class TextField(
+      fieldName: String
+    ) extends Field[String] {
+      val fullPath = path :+ fieldName
+      def render(): Tag = {
+        input(name:= fullPath.mkString("_"), value:= data.get(fieldName :: Nil).getOrElse(""))
+      }
+
+      def getValue: Either[String, String] = Right(data.getOrElse(fieldName :: Nil, ""))
+    }
+
+    def NumericField(
+      fieldName: String
+    ): Field[BigDecimal] = TextField(fieldName).andThen( 
+      {
+        case "" => Right(BigDecimal(0))
+        case entry: String => Either.catchOnly[NumberFormatException]{
+          BigDecimal(entry)
+        }.leftMap(_.getLocalizedMessage())
+      }
+    )
+
+    def atPath(addPath: String*) = {
+      val pathL = addPath.toList
+      Components(
+        data.collect{ case ((pathL::xs), v) => xs -> v },
+        path ++ addPath,
+        action
+      )
+    }
+
+    def actionButton(actionName: String, label: String, secondary: Boolean = false): Tag =
+      button(
+        name:="action",
+        cls:= s"button govuk-button ${if (secondary) "govuk-button--secondary" else ""} nomar",
+        value:=(path :+ actionName).mkString("_")
+      )(label)
+    
   }
 
-  implicit def optBigDecimalToTag(in: Option[BigDecimal]) =
-    raw(in.fold("-")(_.toDouble.formatted("£%,.2f")))
+
 
 }
+
+
         
