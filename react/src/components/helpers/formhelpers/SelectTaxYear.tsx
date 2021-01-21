@@ -5,11 +5,11 @@ import {taxYearString} from '../../../config'
 import {TaxYear} from '../../../interfaces'
 
 interface SelectTaxYearProps {
-  hiddenLabel?: boolean | null
   taxYears: TaxYear[]
   taxYear: TaxYear
   handleTaxYearChange: (e: React.ChangeEvent<HTMLSelectElement>) => void
   onlyStartYear?: boolean
+  hiddenLabel?: boolean
   borderless?: boolean
 }
 

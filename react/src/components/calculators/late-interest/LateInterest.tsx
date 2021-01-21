@@ -7,6 +7,9 @@ import LateInterestResults from "../late-interest/LateInterestResults"
 
 // types
 import {LateInterestContext, useLateInterestForm} from './LateInterestContext'
+import {validateLateInterestPayload} from '../../../validation/validation'
+import {hasKeys} from '../../../services/utils'
+import ErrorSummary from '../../helpers/gov-design-system/ErrorSummary'
 
 const pageTitle = 'Interest on late or unpaid Class 1 NI contributions'
 
@@ -14,7 +17,12 @@ function LateInterestPage() {
   const [showSummary, setShowSummary] = useState<boolean>(false)
   const {
     details,
-    setDetails
+    rows,
+    setDetails,
+    rowsErrors,
+    errors,
+    setErrors,
+    setRowsErrors
   } = useContext(LateInterestContext)
 
   const handleChange = ({
@@ -24,7 +32,15 @@ function LateInterestPage() {
   }
 
   const submitForm = (showSummaryIfValid: boolean) => {
+    setErrors({})
 
+    const payload = {
+      rows
+    }
+
+    if(validateLateInterestPayload(payload, setRowsErrors)) {
+      console.log('valid')
+    }
   }
 
   const handleSubmit = (event: React.FormEvent) => {
@@ -39,8 +55,12 @@ function LateInterestPage() {
       :
         <>
 
-          {/* error summary*/}
-          <div>[Add error summary]</div>
+          {(hasKeys(rowsErrors) || hasKeys(errors)) &&
+          <ErrorSummary
+              errors={errors}
+              rowsErrors={rowsErrors}
+          />
+          }
 
           <h1>{pageTitle}</h1>
 
