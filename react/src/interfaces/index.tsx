@@ -89,6 +89,13 @@ export interface DirectorsRow {
   bands?: Calculated
 }
 
+export interface Class1DebtRow {
+  id: string
+  taxYears: TaxYear[]
+  taxYear: TaxYear
+  debt: string
+}
+
 // Class 2 Or 3
 export interface Class2Or3FormProps {
   earningsFactor: string
