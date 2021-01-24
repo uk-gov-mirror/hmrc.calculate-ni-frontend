@@ -6,7 +6,7 @@ import {Class1DebtRow, Class1S, DetailsProps, GovDateRange, TaxYear} from '../..
 import {buildTaxYears} from "../../../config";
 import {ClassOne} from "../../../calculation";
 import configuration from "../../../configuration.json";
-import {GenericErrors, LateInterestRowsErrors, RowsErrors} from '../../../validation/validation'
+import {GenericErrors} from '../../../validation/validation'
 
 
 const ClassOneCalculator = new ClassOne(JSON.stringify(configuration))
@@ -41,9 +41,9 @@ interface LateInterestContext {
   dateRange: GovDateRange
   setDateRange: Dispatch<SetStateAction<GovDateRange>>
   errors: GenericErrors
-  setErrors: Function
-  rowsErrors: LateInterestRowsErrors
-  setRowsErrors: Dispatch<LateInterestRowsErrors>
+  setErrors: Dispatch<GenericErrors>
+  validateRemissionPeriods: boolean
+  setValidateRemissionPeriods: Function
 }
 
 export const LateInterestContext = React.createContext<LateInterestContext>(
@@ -57,8 +57,8 @@ export const LateInterestContext = React.createContext<LateInterestContext>(
     setDateRange: () => {},
     errors: {},
     setErrors: () => {},
-    rowsErrors: {},
-    setRowsErrors: () => {}
+    validateRemissionPeriods: false,
+    setValidateRemissionPeriods: () => {}
   }
 )
 
@@ -67,7 +67,7 @@ export function useLateInterestForm() {
   const [rows, setRows] = useState<Array<Class1DebtRow>>(defaultRows)
   const [dateRange, setDateRange] = useState<GovDateRange>((() => ({from: null, to: null})))
   const [errors, setErrors] = useState<GenericErrors>({})
-  const [rowsErrors, setRowsErrors] = useState<LateInterestRowsErrors>({})
+  const [validateRemissionPeriods, setValidateRemissionPeriods] = useState<boolean>(false)
 
   return {
     details,
@@ -79,7 +79,7 @@ export function useLateInterestForm() {
     setDateRange,
     errors,
     setErrors,
-    rowsErrors,
-    setRowsErrors
+    validateRemissionPeriods,
+    setValidateRemissionPeriods
   }
 }

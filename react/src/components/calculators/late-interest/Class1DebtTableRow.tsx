@@ -14,7 +14,7 @@ function Class1DebtTableRow(props: {
   taxYears: TaxYear[]
 }) {
   const {row, taxYears} = props
-  const {rows, setRows} = useContext(LateInterestContext)
+  const {rows, setRows, errors} = useContext(LateInterestContext)
 
   const handleTaxYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const ty = e.currentTarget.value
@@ -48,7 +48,7 @@ function Class1DebtTableRow(props: {
           onlyStartYear={true}
         />
       </td>
-      <td className="input">
+      <td className={`input${errors[`${row.id}-class1-debt`] ? ` error-cell` : ``}`}>
         <TextInput
           labelText="Enter Class 1 debt"
           hiddenLabel={true}

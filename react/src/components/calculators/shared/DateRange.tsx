@@ -2,7 +2,7 @@ import DateInputs from "../../helpers/formhelpers/DateInputs";
 import React, {Dispatch, SetStateAction, useEffect, useState} from "react";
 import {GovDateRange} from "../../../interfaces";
 import {GenericErrors} from "../../../validation/validation";
-import {getNumberOfWeeks, validDateParts} from '../../../services/utils'
+import {hasNonEmptyStrings, getNumberOfWeeks, validDateParts} from '../../../services/utils'
 
 interface DateRangeProps {
   setDateRange: Dispatch<SetStateAction<GovDateRange>>
@@ -10,6 +10,8 @@ interface DateRangeProps {
   legends: {from: string, to: string}
   dateRange?: GovDateRange | null
   id: string
+  isOptional?: boolean
+  setValidateOptionalDateRange?: Function
 }
 
 enum DateParts {
@@ -35,7 +37,7 @@ const extractDatePartString = (part: DateParts, date: Date | null | undefined) =
 }
 
 export const DateRange = (props: DateRangeProps) => {
-  const { setDateRange, errors, legends, id, dateRange } = props
+  const { setDateRange, errors, legends, id, dateRange, isOptional, setValidateOptionalDateRange } = props
   const [fromDay, setFromDay] = useState(extractDatePartString(DateParts.DAY, dateRange?.from))
   const [fromMonth, setFromMonth] = useState(extractDatePartString(DateParts.MONTH, dateRange?.from))
   const [fromYear, setFromYear] = useState(extractDatePartString(DateParts.YEAR, dateRange?.from))
@@ -70,6 +72,17 @@ export const DateRange = (props: DateRangeProps) => {
       }
     })
   }, [toDay, toMonth, toYear, setDateRange])
+
+  // conditional date ranges - trigger validation
+  useEffect(() => {
+    if(isOptional) {
+      if (hasNonEmptyStrings([fromDay, fromMonth, fromYear, toDay, toMonth, toYear])) {
+        setValidateOptionalDateRange && setValidateOptionalDateRange(true)
+      } else {
+        setValidateOptionalDateRange && setValidateOptionalDateRange(false)
+      }
+    }
+  }, [fromDay, fromMonth, fromYear, toDay, toMonth, toYear])
 
   return (
     <div className="container">

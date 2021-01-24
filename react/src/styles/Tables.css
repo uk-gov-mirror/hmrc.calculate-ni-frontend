@@ -27,6 +27,10 @@ select.borderless {
   outline: none;
 }
 
+table.contribution-details select.borderless {
+  border-width: 1px;
+}
+
 .borderless {
   margin-right: 6px;
   width: 100%;

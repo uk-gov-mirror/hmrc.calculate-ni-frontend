@@ -18,11 +18,11 @@ function LateInterestPage() {
   const {
     details,
     rows,
+    dateRange,
     setDetails,
-    rowsErrors,
     errors,
     setErrors,
-    setRowsErrors
+    validateRemissionPeriods
   } = useContext(LateInterestContext)
 
   const handleChange = ({
@@ -35,10 +35,11 @@ function LateInterestPage() {
     setErrors({})
 
     const payload = {
-      rows
+      rows,
+      dateRange
     }
-
-    if(validateLateInterestPayload(payload, setRowsErrors)) {
+  //validateRemissionsPeriod
+    if(validateLateInterestPayload(payload, setErrors, validateRemissionPeriods)) {
       console.log('valid')
     }
   }
@@ -55,10 +56,9 @@ function LateInterestPage() {
       :
         <>
 
-          {(hasKeys(rowsErrors) || hasKeys(errors)) &&
+          {(hasKeys(errors)) &&
           <ErrorSummary
               errors={errors}
-              rowsErrors={rowsErrors}
           />
           }
 

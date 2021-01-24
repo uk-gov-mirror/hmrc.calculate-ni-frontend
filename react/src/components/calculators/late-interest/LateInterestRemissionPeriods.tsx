@@ -7,7 +7,8 @@ import {LateInterestContext} from './LateInterestContext'
 function LateInterestRemissionPeridos() {
   const {
     setDateRange,
-    errors
+    errors,
+    setValidateRemissionPeriods
   } = useContext(LateInterestContext)
   return (
     <div className="section--top section-outer--top">
@@ -15,13 +16,15 @@ function LateInterestRemissionPeridos() {
 
       <div className="section--top">
         <DateRange
-          id="remission-period"
+          id="remissionPeriod"
           legends={{
-            from: "Start (optional)",
-            to: "End (optional)"
+            from: "Start",
+            to: "End"
           }}
           setDateRange={setDateRange}
           errors={errors}
+          isOptional={true}
+          setValidateOptionalDateRange={setValidateRemissionPeriods}
         />
       </div>
 
