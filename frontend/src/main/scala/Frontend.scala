@@ -8,162 +8,36 @@ import java.time.LocalDate
 import io.circe.generic.auto._, io.circe.syntax._
 import io.circe._
 
-@ScalaJSDefined
+/** A dummy object for backward compatibility */
 @JSExportTopLevel("ClassOne")
-class ClassOne(json: String) extends js.Object {
+@deprecated("Use NiFrontend")
+final class ClassOne(json: String) extends NiFrontend(json) {
 
-  implicit def convertDate(in: Date): LocalDate =
-    LocalDate.of(in.getFullYear.toInt, in.getMonth.toInt, in.getDate.toInt)
+  @deprecated("Use classOne.calculateJson")
+  lazy val calculate = classOne.calculateJson _
+
+  @deprecated("Use classOne.calculateProRataJson")
+  lazy val calculateProRata = classOne.calculateProRataJson _
+
+  @deprecated("Use classOne.getTaxYears")
+  lazy val getTaxYears = classOne.getTaxYears _
+
+  @deprecated("Use classOne.getApplicableCategories")
+  lazy val getApplicableCategories = classOne.getApplicableCategories _
+
+}
+
+@JSExportTopLevel("NiFrontend")
+class NiFrontend(json: String) extends js.Object {
 
   val config: Configuration = EoiJsonEncoding.fromJson(json) match {
     case Right(z) => z
     case Left(err) => throw new IllegalArgumentException(s"$err")
   }
 
-  def calculate(
-    on: Date,
-    amount: Double,
-    cat: String, // single character
-    period: String, // one of Wk, Mnth, 4Wk or Ann
-    qty: Int = 1, 
-    contractedOutStandardRate: Boolean = false
-  ): String = {
-    val ret = config.calculateClassOne(on, BigDecimal(amount.toString), cat.head, Period(period), qty, contractedOutStandardRate)
-    ret.asJson.toString
-  }
-
-  def calculateProRata(
-    from: Date,
-    to: Date,    
-    amount: Double,
-    cat: String, // single character
-    contractedOutStandardRate: Boolean = false
-  ): String = {
-    val totalForYear = config.calculateClassOne(from, BigDecimal(amount.toString), cat.head, Period.Year, 1, contractedOutStandardRate)
-    val ratio = config.proRataRatio(from, to).get
-    val ret = totalForYear.mapValues{ case (b,ee,er) => (b * ratio,ee * ratio,er * ratio) }
-    ret.asJson.toString
-  }
-
-  def isCosrApplicable(on: Date): Boolean = {
-    val interval = config.classOne.keys.find(_.contains(on)).getOrElse(
-      throw new NoSuchElementException(s"Cannot find an interval for $on")
-    )
-    config.classOne(interval).values.exists(_.contractedOutStandardRate.isDefined)
-  }
-
-  def getTaxYears: js.Array[String] = {
-    val i = config.classOne.keys.map(_.toString)
-    i.toJSArray
-  }
-
-  def getApplicableCategories(on: Date): String = {
-    val interval = config.classOne.keys.find(_.contains(on)).getOrElse(
-      throw new NoSuchElementException(s"Cannot find an interval for $on")
-    )
-    config.classOne(interval).values.flatMap( x =>
-      x.employee.keys ++ x.employer.keys
-    ).toList.sorted.distinct.map{ch => s"$ch"}.mkString
-  }
-
-  def calculateClassOneAAndB(
-    on: Date,
-    amount: Double
-  ): String = config.calculateClassOneAAndB(on, amount).getOrElse(
-    throw new NoSuchElementException(s"Class One A and B undefined for $on")
-  ).toString
-
-  def calculateClassTwo(
-                         taxYear: Date,
-                         paymentDate: Date,
-                         earningsFactor: Double
-                       ): String = {
-    val payload = JsonObject(
-      "contributionsDue"    -> Json.fromInt(39),
-      "rate"                -> Json.fromBigDecimal(BigDecimal("3.05")),
-      "totalAmountDue"      -> Json.fromBigDecimal(BigDecimal("118.45")),
-      "dateHigherRateApply" -> LocalDate.of(2019, 4, 5).asJson,
-      "finalPaymentDate"    -> LocalDate.of(2019, 4, 5).asJson,
-    )
-    payload.asJson.toString
-  }
-
-  def calculateClassThree(
-                         taxYear: Date,
-                         paymentDate: Date,
-                         earningsFactor: Double
-                       ): String = {
-    val payload = JsonObject(
-      "contributionsDue"    -> Json.fromInt(39),
-      "rate"                -> Json.fromBigDecimal(BigDecimal("3.05")),
-      "totalAmountDue"      -> Json.fromBigDecimal(BigDecimal("118.45")),
-      "dateHigherRateApply" -> LocalDate.of(2019, 4, 5).asJson,
-      "finalPaymentDate"    -> LocalDate.of(2019, 4, 5).asJson,
-    )
-    payload.asJson.toString
-  }
-
-  /*
-  def calculateClassThree(
-    on: Date,
-    numberOfWeeks: Int
-  ): String = config.calculateClassThree(on, numberOfWeeks).getOrElse(
-    throw new NoSuchElementException(s"Class Three undefined for $on")
-  ).toString
-  */
-  def calculateClassFour(
-    on: LocalDate,
-    amount: Double
-  ): String = {
-    val (l,h) = config.calculateClassFour(on, amount).getOrElse(
-      throw new NoSuchElementException(s"Class Three undefined for $on")
-    )
-    l.toString + "," + h.toString
-  }
-
-  object interestOnLateClassOne {
-
-    private def sampleResponse(rowsIn: List[InterestRow]) = new js.Object {
-      val totalDebt: Double = 1
-      val totalInterest: Double = 2
-      val grandTotal: Double = 3
-
-      val rows: js.Array[js.Object] = rowsIn.zipWithIndex.map { case (row,i) => 
-        new js.Object {
-          val periodStart = row.periodStart
-          val debt = row.debt
-          val interestDue = (i+1) * 100
-        } : js.Object
-      }.toJSArray
-    }
-
-    def calculate(
-      rows: js.Array[InterestRow],
-      remissionPeriod: RemissionPeriod
-    ): js.Object = sampleResponse(rows.toList)
-
-    def calculate(
-      rows: js.Array[InterestRow]
-    ): js.Object = sampleResponse(rows.toList)
-
-
-    def getRates(): js.Array[js.Object] = {2010 to 2020}.map { yearGen => 
-      new js.Object {
-        val year = yearGen
-        val rate = 0.055
-      }: js.Object
-    }.toJSArray
-  }
+  lazy val classOne = new ClassOneFrontend(config)
+  lazy val classTwo = new ClassTwoFrontend(config)
+  lazy val classThree = new ClassThreeFrontend(config)
+  lazy val weeklyContributions = new WeeklyContributions(config)
+  lazy val interestOnLateClassOne = new InterestOnUnpaidClassOne(config)    
 }
-
-@JSExportTopLevel("InterestRow")
-class InterestRow(
-  val periodStart: js.Date,
-  val debt: Double
-)
-
-@JSExportTopLevel("RemissionPeriod")
-class RemissionPeriod(
-  val start: js.Date,
-  val end: js.Date
-)
