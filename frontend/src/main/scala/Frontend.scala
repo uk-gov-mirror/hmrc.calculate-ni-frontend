@@ -121,7 +121,7 @@ class ClassOne(json: String) extends js.Object {
     l.toString + "," + h.toString
   }
 
-  object interestOnLateClassOne {
+  val interestOnLateClassOne = new js.Object {
 
     private def sampleResponse(rowsIn: List[InterestRow]) = new js.Object {
       val totalDebt: Double = 1
