@@ -59,7 +59,6 @@ case class ClassFour(
   upperRate: BigDecimal = 0
 )
 
-
 /** Class 1 NICs are earnings related contributions paid by employed
   * earners and their employers. Liability starts at age 16 and ends
   * at Sate Pension age for earners; employers continue to pay beyond
@@ -208,4 +207,52 @@ case class Configuration(
       ))
     }
   }
+
+  def unofficialDefermentAnnualMax(
+    input: UnofficialDefermentIn
+  ): cats.data.Writer[List[String], BigDecimal] = {
+
+    import cats.data.Writer._
+
+    def compute[A](in: A)(msg: String): cats.data.Writer[List[String], A]  = 
+      tell(List(msg + " = " + in.toString)) flatMap {_ => value[List[String], A](in)}
+
+    import input._
+    for {
+      stepOne <- compute((uel - et) * weeks)(s"Step 1: (uel - et) * weeks = ($uel - $et) * $weeks")
+      stepTwo <- compute(stepOne * 0.12)(s"Step 2: stepOne * 0.12 = $stepOne * 0.12")
+      stepThreeA <- value[List[String], List[BigDecimal]](rows.map(_.earningsAtPtToUel))
+      stepThree <- compute(stepThreeA.sum)(s"Step 3: sum of earnings at uel to et = ${stepThreeA.mkString("+")}")
+      stepFour <- compute(stepThree - stepOne)(s"Step 4: stepThree - stepOne = $stepThree - $stepOne")
+      stepFive <- if (stepFour >= 0) {
+        compute(stepFour * 0.02)(s"Step 5: stepFour * 0.02 = $stepFour * 0.02")
+      } else {
+        compute(Zero)("Step 5: disregarding as stepFour is negative") 	
+      }
+      stepSixA <- value[List[String], List[BigDecimal]](rows.map(_.earningsOverUel))
+      stepSix <- compute(stepSixA.sum)(s"Step 6: Total of earnings above the UEL = ${stepSixA.mkString("+")}")
+      stepSeven <- compute(stepSix * 0.02)(s"Step 7: stepSix * 0.02 = $stepSix * 0.02")
+      stepEight <- compute(stepTwo + stepFive + stepSeven)(s"Step 8: stepTwo + stepFive + stepSeven = $stepTwo + $stepFive + $stepSeven")      
+    } yield stepEight
+  }
 }
+
+case class UnofficialDefermentInRow (
+  firstRate: BigDecimal,
+  secondRate: BigDecimal,  
+  earningsAtLel: BigDecimal,
+  earningsAtLelToPt: BigDecimal,
+  earningsAtPtToUel: BigDecimal,
+  nics: BigDecimal
+) {
+  def earningsOverUel = (nics - (earningsAtPtToUel * firstRate)) / secondRate
+}
+
+case class UnofficialDefermentIn (
+  lel: BigDecimal,
+  et: BigDecimal,
+  uel: BigDecimal,
+  rows: List[UnofficialDefermentInRow],
+  weeks: Int = 53
+)
+
