@@ -23,12 +23,19 @@ export default function Class1TableRow(props: TableRowProps) {
     setRows,
     errors,
     categories,
-    setPeriodNumbers
+    setPeriodNumbers,
+    result,
+    setResult
   } = useContext(ClassOneContext)
 
   const { config } = useContext(NiFrontendContext)
 
+  const invalidateResults = () => {
+    setResult(null)
+  }
+
   const handleChange = (r: Row, e: React.ChangeEvent<HTMLInputElement>) => {
+    invalidateResults()
     setActiveRowId(r.id)
     setRows(rows.map((cur: Row) =>
       cur.id === r.id ?
@@ -147,7 +154,7 @@ export default function Class1TableRow(props: TableRowProps) {
 
       <td>{numeral(row.ee).format('$0,0.00')}</td>
       <td>{numeral(row.er).format('$0,0.00')}</td>
-      {!printView && row.explain && row.explain.length > 0 &&
+      {!printView && result && row.explain && row.explain.length > 0 &&
         <td>
            <a href={`#${row.id}-explain`} onClick={(e) => {
              e.preventDefault()
