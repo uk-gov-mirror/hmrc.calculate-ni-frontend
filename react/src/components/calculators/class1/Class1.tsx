@@ -12,6 +12,7 @@ import ErrorSummary from '../../helpers/gov-design-system/ErrorSummary'
 // utils
 import {hasKeys} from "../../../services/utils";
 import {ClassOneContext, useClassOneForm, ClassOneRowInterface, Row} from "./ClassOneContext";
+import SecondaryButton from '../../helpers/gov-design-system/SecondaryButton'
 
 const pageTitle = 'Calculate Class 1 National Insurance (NI) contributions'
 
@@ -127,12 +128,25 @@ const Class1Page = () => {
           </form>
         </>
       }
-      <Totals
-        grossPayTally={showSummary}
-        result={result}
-        isSaveAndPrint={showSummary}
-        context={ClassOneContext}
-      />
+
+      <div className="divider--bottom">
+        <Totals
+          grossPayTally={showSummary}
+          result={result}
+          isSaveAndPrint={showSummary}
+          context={ClassOneContext}
+        />
+      </div>
+
+      <div className="container section--top section-outer--top">
+        <div className="form-group half">
+          <SecondaryButton
+            label="Save and print"
+            onClick={handleShowSummary}
+          />
+        </div>
+      </div>
+
       {showSummary && (
         <div className="govuk-!-padding-bottom-9">
           <button className="button" onClick={() => window.print()}>
