@@ -23,57 +23,69 @@
 @(selectedInterval: LocalDate, intervals: List[(LocalDate, String)], selectedCategory: Char, categories: List[Char], bands: List[(String, RateDefinition)])(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
 @layout(pageTitle = Some("calculate-ni-frontend")) {
-<h1 class="govuk-heading-xl">Class One</h1>
 
-<form method="GET">
-  <div class="govuk-form-group">
-    <select name="date" class="govuk-select">
-      @intervals.map { case (k,v) =>
-        <option value="@{k.toString}" @if(k == selectedInterval){selected}>@v</option>
-      }
-    </select>
-
-    <select name="category" class="govuk-select">
-      @categories.map { k =>
-        <option value="@{k.toString}" @if(k == selectedCategory){selected}>@k</option>
-      }
-    </select>
+  <div class="govuk-breadcrumbs">
+    <ol class="govuk-breadcrumbs__list">
+      <li class="govuk-breadcrumbs__list-item">
+        <a class="govuk-breadcrumbs__link" href="/calculate-ni">Home</a>
+      </li>
+      <li class="govuk-breadcrumbs__list-item">
+        <a class="govuk-breadcrumbs__link" href="#">Class One</a>
+      </li>
+    </ol>
   </div>
 
-  <button class="govuk-button" data-module="govuk-button">
-    Submit
-  </button>
+  <h1 class="govuk-heading-xl">Class One</h1>
 
-  @bands.map { case (name, band) =>
-  <table class="govuk-table">
-    <caption class="govuk-table__caption">@name</caption>
-    <tbody>
-      <tr class="govuk-table__row">
-        <th scope="col" class="govuk-table__header">Weekly</th>
-        <td class="govuk-table__cell">@{band.effectiveWeek.lowerValue.fold("∞")(x => f"£${x.toInt}%,d")}</td>
-        <th scope="col" class="govuk-table__header">To</th>
-        <td class="govuk-table__cell">@{band.effectiveWeek.upperValue.fold("∞")(x => f"£${x.toInt}%,d")}</td>
-      </tr>
-      <tr class="govuk-table__row">
-        <th scope="col" class="govuk-table__header">Monthly</th>
-        <td class="govuk-table__cell">@{band.effectiveMonth.lowerValue.fold("∞")(x => f"£${x.toInt}%,d")}</td>
-        <th scope="col" class="govuk-table__header">To</th>
-        <td class="govuk-table__cell">@{band.effectiveMonth.upperValue.fold("∞")(x => f"£${x.toInt}%,d")}</td>
-      </tr>
-      <tr class="govuk-table__row">
-        <th scope="col" class="govuk-table__header">Annually</th>
-        <td class="govuk-table__cell">@{band.year.lowerValue.fold("∞")(x => f"£${x.toInt}%,d")}</td>
-        <th scope="col" class="govuk-table__header">To</th>
-        <td class="govuk-table__cell">@{band.year.upperValue.fold("∞")(x => f"£${x.toInt}%,d")}</td>
-      </tr>
-      <tr class="govuk-table__row">
-        <th scope="col" class="govuk-table__header">Employee Rate</th>
-        <td class="govuk-table__cell">@{band.employee.getOrElse(selectedCategory, BigDecimal(0)) * 100}%</td>
-        <th scope="col" class="govuk-table__header">Employer Rate</th>
-        <td class="govuk-table__cell">@{band.employer.getOrElse(selectedCategory, BigDecimal(0)) * 100}%</td>
-      </tr>
-    </tbody>
-  </table>
-  }
-</form>
+  <form method="GET">
+    <div class="govuk-form-group">
+      <select name="date" class="govuk-select">
+        @intervals.map { case (k,v) =>
+          <option value="@{k.toString}" @if(k == selectedInterval){selected}>@v</option>
+        }
+      </select>
+
+      <select name="category" class="govuk-select">
+        @categories.map { k =>
+          <option value="@{k.toString}" @if(k == selectedCategory){selected}>@k</option>
+        }
+      </select>
+    </div>
+
+    <button class="govuk-button" data-module="govuk-button">
+      Submit
+    </button>
+
+    @bands.map { case (name, band) =>
+    <table class="govuk-table">
+      <caption class="govuk-table__caption">@name</caption>
+      <tbody>
+        <tr class="govuk-table__row">
+          <th scope="col" class="govuk-table__header">Weekly</th>
+          <td class="govuk-table__cell">@{band.effectiveWeek.lowerValue.fold("∞")(x => f"£${x.toInt}%,d")}</td>
+          <th scope="col" class="govuk-table__header">To</th>
+          <td class="govuk-table__cell">@{band.effectiveWeek.upperValue.fold("∞")(x => f"£${x.toInt}%,d")}</td>
+        </tr>
+        <tr class="govuk-table__row">
+          <th scope="col" class="govuk-table__header">Monthly</th>
+          <td class="govuk-table__cell">@{band.effectiveMonth.lowerValue.fold("∞")(x => f"£${x.toInt}%,d")}</td>
+          <th scope="col" class="govuk-table__header">To</th>
+          <td class="govuk-table__cell">@{band.effectiveMonth.upperValue.fold("∞")(x => f"£${x.toInt}%,d")}</td>
+        </tr>
+        <tr class="govuk-table__row">
+          <th scope="col" class="govuk-table__header">Annually</th>
+          <td class="govuk-table__cell">@{band.year.lowerValue.fold("∞")(x => f"£${x.toInt}%,d")}</td>
+          <th scope="col" class="govuk-table__header">To</th>
+          <td class="govuk-table__cell">@{band.year.upperValue.fold("∞")(x => f"£${x.toInt}%,d")}</td>
+        </tr>
+        <tr class="govuk-table__row">
+          <th scope="col" class="govuk-table__header">Employee Rate</th>
+          <td class="govuk-table__cell">@{band.employee.getOrElse(selectedCategory, BigDecimal(0)) * 100}%</td>
+          <th scope="col" class="govuk-table__header">Employer Rate</th>
+          <td class="govuk-table__cell">@{band.employer.getOrElse(selectedCategory, BigDecimal(0)) * 100}%</td>
+        </tr>
+      </tbody>
+    </table>
+    }
+  </form>
 }
