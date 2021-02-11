@@ -23,19 +23,10 @@ import org.scalatest._
 import cats.syntax.either._
 import java.time.LocalDate
 import java.io._
-
-object Int {
-  def unapply(in: String): Option[Int] = {
-    Either.catchOnly[NumberFormatException](in.toInt).toOption
-  }
-}
-
-object Money {
-  def unapply(in: String): Option[BigDecimal] = {
-    Either.catchOnly[NumberFormatException](BigDecimal(in)).toOption
-  }
-}
-
+import cats.data.Chain
+import cats.syntax.group._
+import cats.instances.tuple._
+import cats.instances.bigDecimal._
 
 class ClassOneSpec extends FunSpec with Matchers {
 
@@ -47,7 +38,7 @@ class ClassOneSpec extends FunSpec with Matchers {
   }
 
   val reportDir = {
-    val d = new File("target/testing-reports")
+    val d = new File("target/test-reports")
     if (!d.exists) d.mkdirs
     d
   }
@@ -61,26 +52,25 @@ class ClassOneSpec extends FunSpec with Matchers {
 
   describe("Access Application compatibility") {
 
-    files.foreach { file =>
-      describe(file.getName()) {
-        val reader = CSVReader.open(file)
+    val reportFile = {
+      val f = new File(reportDir, "class-one.txt")
+      if (f.exists) f.delete
+      f
+    }
+
+    val writer = new BufferedWriter(new FileWriter(reportFile))
+
+    def writeln(in: String = ""): Unit = {
+      writer.write(in)
+      writer.write(System.lineSeparator())
+    }
+
+    val testOut = files.toList.flatMap { file =>
+      val reader = CSVReader.open(file)
         val lines = reader.all.zipWithIndex.drop(1).filterNot(_._1.mkString.startsWith("#"))
 
-        val reportFile = {
-          val f = new File(reportDir, file.getName)
-          if (f.exists) f.delete
-          f
-        }
-
-        val writer = new BufferedWriter(new FileWriter(reportFile))
-
-        def writeln(in: String = ""): Unit = {
-          writer.write(in)
-          writer.write(System.lineSeparator())
-        }
-
-        val (pass, fail) = lines.foldLeft((0,0)){ case ((passAcc,failAcc),(line, indexMinus)) =>
-
+      val fileResults = lines.foldLeft(List.empty[TestResult[(BigDecimal, BigDecimal)]]){
+          case (acc,(line, indexMinus)) =>
           line.map(_.trim) match { 
             case (Int(year)::periodS::Int(periodNumber)::categoryS::Money(grossPay)::Money(expectedEmployee)::Money(expectedEmployer)::xs) =>
 
@@ -103,53 +93,137 @@ class ClassOneSpec extends FunSpec with Matchers {
               val employee = res.employeeContributions.value
               val employer = res.employerContributions.value              
               if (employee != expectedEmployee || employer != expectedEmployer) {
-
+                var msg: Chain[String] = Chain.empty
+                def writeln(in: String = "") = msg = msg :+ in
                 val director = comments.contains("director")
                 writeln(statusString)
                 writeln(statusString.map{_ => '='})
                 writeln()                
-                writeln("  " + line.mkString(","))
+                writeln(s"  year: $year")
+                writeln(s"  period: $periodS")
+                if (periodNumber > 1) writeln(s"  periodNumber: $periodNumber")
+                writeln(s"  category: $categoryS ")
+                writeln(s"  grossPay: $grossPay ")
+                writeln()
 
+                val (eeError) = expectedEmployee - employee
+                val (erError) = expectedEmployer - employer                
 
-                if (expectedEmployee != employee) {
-                  val error = expectedEmployee - employee
-                  writeln(s"  Employee expected: $expectedEmployee, actual: $employee ($error)")
+                if (eeError != Zero) {
+                  writeln(s"  Employee expected: $expectedEmployee, actual: $employee ($eeError)")
                   writeln()
                   writeln(res.employeeContributions.explain.map("  " + _).mkString("\n"))
                   writeln()
                 }
 
-                if (expectedEmployer != employer) {
-                  val error = expectedEmployer - employer
-                  writeln(s"  Employer expected: $expectedEmployer, actual: $employer ($error)")
+                if (erError != Zero) {
+                  writeln(s"  Employer expected: $expectedEmployer, actual: $employer ($erError)")
                   writeln()                  
                   writeln(res.employerContributions.explain.map("  " + _).mkString("\n"))
                   writeln()
                 }
-                (passAcc, failAcc+1)
+
+                TestFail(year, category, (expectedEmployee, expectedEmployer), (employee, employer), msg.toList) ::acc 
               } else {
-                (passAcc+1, failAcc)
+                TestPass(year, category, (expectedEmployee, expectedEmployer)) ::acc                 
               }
 
-              // val director = comments.contains("director")
-              // val statusString = s"Year:$year,COSR:$cosr:Period:$periodS/$periodNumber,Director:$director"
-              // it(s"${file.getName}:${indexMinus + 1} employee's NI [$statusString]") {
-              //   employee should be (BigDecimal(expectedEmployeeS) /* +- 0.02 */)
-              // }
-              // it(s"${file.getName}:${indexMinus + 1} employer's NI [$statusString]") {
-              //   employer should be (BigDecimal(expectedEmployerS) /* +- 0.02 */)
-              // }
-            case _ => (passAcc, failAcc)
+            case _ => acc
           }
-        }
+      }
 
-        val total = pass + fail
-        writeln(f"pass: $pass (${pass * 100/ total}%%)")
-        writeln(f"fail: $fail (${fail * 100 / total}%%)")        
+      reader.close()
+      fileResults
+//      describe(file.getName()) { }
+    }
 
-        reader.close()
-        writer.close()
+    implicit class RichTestRecord(in: TestResult[(BigDecimal, BigDecimal)]) {
+      def failCount: Int = in match {
+        case r: TestFail[(BigDecimal, BigDecimal)] =>
+          if (r.expected._1 == r.actual._1 || r.expected._2 == r.actual._2)
+            1
+          else
+            2
+        case _ => 0 
       }
     }
+
+
+    implicit class RichTestRecordList(in: List[TestResult[(BigDecimal, BigDecimal)]]) {
+      def status: String = {
+        val potentialScore = in.size * 2
+        val fail = in.map(_.failCount).sum
+        val pass = potentialScore - fail
+        val percentage = BigDecimal(pass) / BigDecimal(potentialScore) * 100
+        f"$pass/$potentialScore ($percentage%.2f%%)"
+      }
+    }
+
+    val passRecords: List[TestPass[(BigDecimal, BigDecimal)]] = testOut.collect{
+      case x: TestPass[(BigDecimal, BigDecimal)] => x
+    }
+    val failRecords = testOut.collect{
+      case x: TestFail[(BigDecimal, BigDecimal)] => x
+    }
+
+    val total = testOut.size * 2
+
+    val overall = s"Overall: ${testOut.status}"
+    writeln(overall)
+    println(overall)
+
+    writeln()
+    writeln("Error breakdown by year:")
+    testOut.groupBy(_.year).toList.sortBy(_._1).foreach { case (year, records) =>
+      writeln(s"$year: ${records.status}")
+    }
+
+    writeln()
+    writeln("Error breakdown by category:")
+    testOut.groupBy(_.category)
+      .toList
+      .sortBy(x => x._1)
+      .foreach { case (category, records) =>
+        writeln(s"$category: ${records.status}")
+      }
+
+    val errorBands = List(0.02,0.05,0.1,0.25,0.50,1,2,4,8)
+
+    writeln()
+    writeln("Error breakdown by margin:")
+    failRecords.flatMap{x =>
+      val dev = x.expected |-| x.actual
+      List(dev._1.abs, dev._2.abs)
+    }.filter(_ != Zero).map { e =>
+      errorBands.find(_ >= e) match {
+        case Some(a) => s"≤$a"
+        case None => s">${errorBands.last}"
+      }
+    }.groupBy(identity)
+      .mapValues(_.size)
+      .toList
+      .sortBy(x => (x._1.tail, -x._1.head))
+      .foreach { case (amt, qty) =>
+        writeln(f"$amt:$qty ${(BigDecimal(qty)/total) * 100}%.2f%%")
+      }
+
+    writeln()
+    val badness = failRecords.map{x =>
+      val dev = x.expected |-| x.actual
+      dev._1.abs + dev._2.abs
+    }.sum
+    writeln(f"total badness: $badness%,.2f" )
+
+
+    writeln()
+    writeln()
+    failRecords.sortBy{x =>
+      val dev = x.expected |-| x.actual
+      -dev._1.abs.max(dev._2.abs)
+    }.foreach { r =>
+      r.explanation.foreach(writeln)
+    }
+
+    writer.close()
   }  
 }

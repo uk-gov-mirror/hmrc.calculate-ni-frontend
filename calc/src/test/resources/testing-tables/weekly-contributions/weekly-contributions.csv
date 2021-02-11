@@ -1,0 +1,4 @@
+tax year,from,to,earnings factor, max weeks, actual weeks, deficient
+
+# supply either tax-year, or from+to dates
+# Q: Are all the rows independent?
