@@ -141,7 +141,8 @@ case class Configuration(
   classOneAB: Map[Interval[LocalDate], BigDecimal],
   classTwo: Map[Interval[LocalDate], ClassTwo],
   classThree: Map[Interval[LocalDate], ClassThree],
-  classFour: Map[Interval[LocalDate], ClassFour]
+  classFour: Map[Interval[LocalDate], ClassFour],
+  interestOnUnpaid: Map[Interval[LocalDate], BigDecimal]  
 ) {
 
   def proRataRatio(from: LocalDate, to: LocalDate): Option[BigDecimal] = {
@@ -222,4 +223,6 @@ case class Configuration(
     netPaid: BigDecimal = Zero,
     employeePaid: BigDecimal = Zero
   ) = ClassOneResult(on, classOne.at(on).getOrElse(Map.empty), rows, netPaid, employeePaid)
+
+
 }

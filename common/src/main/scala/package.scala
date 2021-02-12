@@ -18,6 +18,8 @@ import spire.math.Interval
 import spire.math.interval._
 import spire.implicits._
 import java.time.LocalDate
+import cats.syntax.apply._
+import cats.instances.option._
 
 package object eoi {
 
@@ -147,30 +149,28 @@ package object eoi {
   }
 
   implicit class RichDateInterval(inner: Interval[LocalDate]) {
-
-    import cats.implicits._
-
     def numberOfWeeks(
       rounding: BigDecimal.RoundingMode.Value = BigDecimal.RoundingMode.UP
-    ): Option[Int] = {
+    ): Option[Int] = 
+      numberOfDays.map(x => (BigDecimal(x) / 7).setScale(0, rounding).toInt)
 
-      val startDate = inner.lowerBound match {
-        case Open(a) => a.plusDays(1).some
-        case Closed(a) => a.some
+    def numberOfDays: Option[Int] = {
+      val innerEpoch = inner.mapBounds(_.toEpochDay)
+
+      val startDate = innerEpoch.lowerBound match {
+        case Open(a) => Some(a + 1)
+        case Closed(a) => Some(a)
         case _ => None
       }
 
-      val endDate = inner.upperBound match {
-        case Open(a) => a.some
-        case Closed(a) => a.plusDays(1).some
+      val endDate = innerEpoch.upperBound match {
+        case Open(a) => Some(a)
+        case Closed(a) => Some(a + 1)
         case _ => None
       }
 
-      (startDate, endDate) mapN ( (s,e) =>
-        (BigDecimal(e.toEpochDay() - s.toEpochDay()) / 7)
-          .setScale(0, rounding).toInt
-      )
-    }
+      (endDate, startDate) mapN (_ - _)
+    }.map(_.toInt)
   }
 
   type Explained[A] = cats.data.Writer[Vector[String], A]
