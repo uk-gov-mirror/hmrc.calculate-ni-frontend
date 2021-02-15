@@ -1,4 +1,4 @@
-import React, {useContext, useState} from 'react'
+import React, {useContext, useEffect, useState} from 'react'
 import {validateClassOnePayload} from '../../../validation/validation'
 import {ClassOneRow} from '../../../calculation'
 
@@ -11,7 +11,8 @@ import ErrorSummary from '../../helpers/gov-design-system/ErrorSummary'
 
 // utils
 import {hasKeys} from "../../../services/utils";
-import {ClassOneContext, useClassOneForm, ClassOneRowInterface} from "./ClassOneContext";
+import {ClassOneContext, useClassOneForm, ClassOneRowInterface, Row} from "./ClassOneContext";
+import SecondaryButton from '../../helpers/gov-design-system/SecondaryButton'
 
 const pageTitle = 'Calculate Class 1 National Insurance (NI) contributions'
 
@@ -64,18 +65,22 @@ const Class1Page = () => {
 
     if (validateClassOnePayload(payload, setErrors)) {
       const requestRows: Array<ClassOneRowInterface> = rows
-        .map(row => new (ClassOneRow as any)(
+        .map((row: Row) => new (ClassOneRow as any)(
           row.id,
           row.period,
           row.category,
           parseFloat(row.gross),
           false
         ))
-      setResult(ClassOneCalculator.calculate(
+
+      const netNi = payload.niPaidNet || '0'
+      const employeeNi = payload.niPaidEmployee || '0'
+
+      taxYear && setResult(ClassOneCalculator.calculate(
         taxYear.from,
         requestRows,
-        parseFloat(payload.niPaidNet),
-        parseFloat(payload.niPaidEmployee)
+        netNi,
+        employeeNi
       ))
       if (showSummaryIfValid) {
         setShowSummary(true)
@@ -126,14 +131,29 @@ const Class1Page = () => {
           </form>
         </>
       }
-      <Totals
-        grossPayTally={showSummary}
-        result={result}
-        isSaveAndPrint={showSummary}
-        context={ClassOneContext}
-      />
+
+      <div className="divider--bottom">
+        <Totals
+          grossPayTally={showSummary}
+          result={result}
+          isSaveAndPrint={showSummary}
+          context={ClassOneContext}
+        />
+      </div>
+
+      {!showSummary && (
+        <div className="container section--top section-outer--top">
+          <div className="form-group half">
+            <SecondaryButton
+              label="Save and print"
+              onClick={handleShowSummary}
+            />
+          </div>
+        </div>
+      )}
+
       {showSummary && (
-        <div className="govuk-!-padding-bottom-9">
+        <div className="govuk-!-padding-bottom-9 section--top">
           <button className="button" onClick={() => window.print()}>
             Save and print
           </button>

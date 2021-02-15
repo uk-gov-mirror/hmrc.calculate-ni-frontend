@@ -16,22 +16,18 @@
 
 package uk.gov.hmrc.calculatenifrontend.controllers
 
-import javax.inject.{Inject, Singleton}
-import play.api.mvc._
+import controllers.Assets
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import eoi._, EoiJsonEncoding._
 
-@Singleton
-class NiConfigController @Inject()(
-  mcc: MessagesControllerComponents,
+import javax.inject.Inject
+
+class CalculatorUIController @Inject() (
+ mcc: MessagesControllerComponents,
+ assets: Assets
 ) extends FrontendController(mcc) {
 
-  private val ni = ConfigLoader.default
-  private val jsonString: String = toJson(ni).toString
-  
-  val configJson: Action[AnyContent] = Action {
-
-    Ok(jsonString).as("application/json")
+  def loadApplication(): Action[AnyContent] = Action.async { request =>
+    assets.at("/public/build/", "index.html").apply(request)
   }
-
 }

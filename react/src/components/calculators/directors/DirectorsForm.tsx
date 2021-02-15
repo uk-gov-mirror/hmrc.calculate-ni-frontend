@@ -14,6 +14,7 @@ import SecondaryButton from "../../helpers/gov-design-system/SecondaryButton";
 // types
 import {DirectorsFormProps} from '../../../interfaces';
 import uniqid from 'uniqid'
+import NiPaidInputs from "../shared/NiPaidInputs";
 
 numeral.locale('en-gb');
 
@@ -30,7 +31,8 @@ export default function DirectorsForm(props: DirectorsFormProps) {
     rows,
     setRows,
     activeRowId,
-    setActiveRowId
+    setActiveRowId,
+    setResult
   } = useContext(DirectorsContext)
 
   const handleClear = (e: React.ChangeEvent<HTMLButtonElement>) => {
@@ -40,6 +42,7 @@ export default function DirectorsForm(props: DirectorsFormProps) {
 
   const handleAddRow = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault()
+    invalidateResults()
     setRows([...rows, {
       id: uniqid(),
       category: ClassOneCalculator.getApplicableCategories(taxYears[0].from)[0],
@@ -61,6 +64,7 @@ export default function DirectorsForm(props: DirectorsFormProps) {
       })
 
       setRows(newRows)
+      invalidateResults()
     }
   }
 
@@ -68,7 +72,12 @@ export default function DirectorsForm(props: DirectorsFormProps) {
     const selectedTaxYear = taxYears.find(ty => ty.id === e.target.value)
     if (selectedTaxYear) {
       setTaxYear(selectedTaxYear)
+      invalidateResults()
     }
+  }
+
+  const invalidateResults = () => {
+    setResult(null)
   }
 
   return (
@@ -113,6 +122,8 @@ export default function DirectorsForm(props: DirectorsFormProps) {
         selected={earningsPeriod}
         error={errors.earningsPeriod}
       />
+
+      <NiPaidInputs context={DirectorsContext} />
 
       <DirectorsEarningsTable
         showBands={false}

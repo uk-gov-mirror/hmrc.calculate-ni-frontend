@@ -39,6 +39,7 @@ export interface Row {
   er: number
   bands?: Array<Band>
   explain?: Array<string>
+  totalContributions?: number
 }
 
 export interface ClassOneRowInterface {
@@ -81,7 +82,7 @@ export interface CalculatedRow {
 interface TotalRow {
   employee: number
   employer: number
-  net: number
+  total: number
 }
 
 export interface Class1Result {
@@ -95,8 +96,8 @@ export interface Class1Result {
 interface ClassOneContext {
   ClassOneCalculator: Calculator
   taxYears: TaxYear[]
-  taxYear: TaxYear
-  setTaxYear: Dispatch<TaxYear>
+  taxYear: TaxYear | null
+  setTaxYear: Dispatch<TaxYear | null>
   defaultRow: Row,
   rows: Array<Row>
   setRows: Dispatch<Array<Row>>
@@ -123,11 +124,7 @@ export const ClassOneContext = React.createContext<ClassOneContext>(
   {
     ClassOneCalculator: initClassOneCalculator,
     taxYears: [],
-    taxYear: {
-      id: '1',
-      from: new Date(),
-      to: new Date()
-    },
+    taxYear: null,
     setTaxYear: () => {},
     defaultRow: initRow,
     rows: [initRow],
@@ -157,10 +154,9 @@ export function useClassOneForm() {
     NiFrontendInterface
   } = useContext(NiFrontendContext)
   const ClassOneCalculator = NiFrontendInterface.classOne
-  const taxYears: TaxYear[] = buildTaxYears(ClassOneCalculator.getTaxYears)
-  const [taxYear, setTaxYear] = useState<TaxYear>(taxYears[0])
+  const [taxYears, setTaxYears] = useState<TaxYear[]>([])
+  const [taxYear, setTaxYear] = useState<TaxYear | null>(null)
   const [defaultRow, setDefaultRow] = useState<Row>(initRow)
-  const [rows, setRows] = useState<Array<Row>>([defaultRow])
   const [categories, setCategories] = useState<Array<string>>([])
   const [details, setDetails] = React.useReducer(detailsReducer, initialDetails)
   const [errors, setErrors] = useState<GenericErrors>({})
@@ -169,18 +165,22 @@ export function useClassOneForm() {
   const [categoryTotals, setCategoryTotals] = useState<TotalsInCategories>({})
   const [result, setResult] = useState<Class1Result | null>(null)
   const [activeRowId, setActiveRowId] = useState<string | null>(null)
+
   useEffect(() => {
-    if(taxYear.from) {
+    if(taxYear && taxYear.from) {
       const categoriesForTaxYear = ClassOneCalculator.getApplicableCategories(taxYear.from)
       if(categoriesForTaxYear) {
         setCategories(categoriesForTaxYear.split(''))
-        setDefaultRow(prevState => ({
+        setDefaultRow((prevState: Row) => ({
           ...prevState,
           category: categoriesForTaxYear[0]
         }))
+        setRows([defaultRow])
       }
     }
-  }, [taxYear.from])
+  }, [taxYear, ClassOneCalculator])
+
+  const [rows, setRows] = useState<Array<Row>>([defaultRow])
 
   useEffect(() => {
     if(result && result.resultRows) {
@@ -202,17 +202,29 @@ export function useClassOneForm() {
         }
         return row
       }))
+    } else {
+      setRows((prevState: Row[]) => prevState.map(row => {
+        delete row.totalContributions
+        delete row.explain
+        row.ee = 0
+        row.er = 0
+        return row
+      }))
     }
-
   }, [result])
-
-  useEffect(() => {
-    setRows([defaultRow])
-  }, [defaultRow])
 
   useEffect(() => {
     setCategoryTotals(getTotalsInCategories(rows as Row[]))
   }, [rows])
+
+  useEffect(() => {
+    setTaxYear(taxYears[0])
+  }, [taxYears])
+
+  useEffect(() => {
+    const taxYearData = buildTaxYears(ClassOneCalculator.getTaxYears)
+    setTaxYears(taxYearData)
+  }, [ClassOneCalculator])
 
   const setPeriodNumbers = (deletedRow: string | undefined) => {
     for (let period in periods) {

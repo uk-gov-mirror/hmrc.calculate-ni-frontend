@@ -1,7 +1,7 @@
-import React, {Dispatch, useContext, useState} from 'react'
+import React, {Dispatch, useContext, useEffect, useState} from 'react'
 
 // types
-import {DetailsProps, LateRefundsTableRowProps, Rate, TaxYear} from '../../../interfaces'
+import {Class1DebtRow, DetailsProps, LateRefundsTableRowProps, Rate, TaxYear} from '../../../interfaces'
 import uniqid from 'uniqid'
 import {buildTaxYears} from '../../../config'
 import {
@@ -70,6 +70,7 @@ export const LateRefundsContext = React.createContext<LateRefundsContext>(
 )
 
 export function useLateRefundsForm() {
+  const [taxYears, setTaxYears] = useState<TaxYear[]>([])
   const [details, setDetails] = React.useReducer(stateReducer, detailsState)
   const [bankHolidaysNo, setBankHolidaysNo] = React.useState('')
   const [activeRowId, setActiveRowId] = useState<string | null>(null)
@@ -80,18 +81,34 @@ export function useLateRefundsForm() {
     NiFrontendInterface
   } = useContext(NiFrontendContext)
   const ClassOneCalculator = NiFrontendInterface.classOne
-  const taxYears: TaxYear[] = buildTaxYears(ClassOneCalculator.getTaxYears)
   const InterestOnLateRefundsCalculator = NiFrontendInterface.interestOnRefundsClassOne
   const defaultRows = [{
     id: uniqid(),
-    taxYears: taxYears,
     taxYear: taxYears[0],
     refund: '',
     payable: ''
   }]
   const [rows, setRows] = useState<Array<LateRefundsTableRowProps>>(defaultRows)
-  const interestRates = InterestOnLateRefundsCalculator.getRates()
-  const [rates] = useState<Rate[] | null>(interestRates)
+  const [rates, setRates] = useState<Rate[] | null>([])
+
+  useEffect(() => {
+    const taxYearData = buildTaxYears(ClassOneCalculator.getTaxYears)
+    setTaxYears(taxYearData)
+  }, [ClassOneCalculator, NiFrontendInterface])
+
+  useEffect(() => {
+    const interestRates = InterestOnLateRefundsCalculator.getRates()
+    setRates(interestRates)
+  }, [InterestOnLateRefundsCalculator])
+
+  useEffect(() => {
+    if(!results) {
+      setRows((prevState: LateRefundsTableRowProps[]) => prevState.map(row => ({
+        ...row,
+        payable: null
+      })))
+    }
+  }, [results])
 
   return {
     InterestOnLateRefundsCalculator,

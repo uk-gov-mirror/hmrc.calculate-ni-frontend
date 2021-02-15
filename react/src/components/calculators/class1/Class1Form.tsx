@@ -1,21 +1,22 @@
-import React, {useContext} from 'react';
+import React, {useContext, useEffect} from 'react';
 import uniqid from 'uniqid';
 
 import numeral from 'numeral'
 import 'numeral/locales/en-gb';
 
 import ClassOneEarningsTable from './Class1ContributionsTable'
+import SecondaryButton from "../../helpers/gov-design-system/SecondaryButton";
+import SelectTaxYear from "../../helpers/formhelpers/SelectTaxYear";
 
 // types
 import { Class1FormProps } from '../../../interfaces';
 import {ClassOneContext} from "./ClassOneContext";
-import SecondaryButton from "../../helpers/gov-design-system/SecondaryButton";
-import SelectTaxYear from "../../helpers/formhelpers/SelectTaxYear";
+import NiPaidInputs from "../shared/NiPaidInputs";
 
 numeral.locale('en-gb');
 
 function Class1Form(props: Class1FormProps) {
-  const { handleShowSummary, resetTotals } = props
+  const { resetTotals } = props
   const {
     taxYears,
     taxYear,
@@ -25,11 +26,13 @@ function Class1Form(props: Class1FormProps) {
     setActiveRowId,
     activeRowId,
     setErrors,
-    setPeriodNumbers
+    setPeriodNumbers,
+    setResult
   } = useContext(ClassOneContext)
 
   const handleTaxYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setTaxYear(taxYears.find(ty => ty.id === e.target.value) || taxYears[0])
+    setResult(null)
   }
 
   const handleClear = (e: React.ChangeEvent<HTMLButtonElement>) => {
@@ -39,6 +42,7 @@ function Class1Form(props: Class1FormProps) {
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
+    setResult(null)
     const lastRow = rows[rows.length -1]
     const periodNumber = rows.filter(row => row.period === lastRow.period).length + 1
     const id = uniqid()
@@ -59,6 +63,7 @@ function Class1Form(props: Class1FormProps) {
     if(activeRowId) {
       setPeriodNumbers(activeRowId)
       setErrors({})
+      setResult(null)
       setActiveRowId(null)
     }
   }
@@ -73,14 +78,9 @@ function Class1Form(props: Class1FormProps) {
             handleTaxYearChange={handleTaxYearChange}
           />
         </div>
-
-        <div className="form-group half">
-          <SecondaryButton
-            label="Save and print"
-            onClick={handleShowSummary}
-          />
-        </div>
       </div>
+
+      <NiPaidInputs context={ClassOneContext} />
 
       <ClassOneEarningsTable
         showBands={false}

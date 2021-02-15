@@ -20,17 +20,18 @@ function LateRefundsTable(props: LateRefundsTable) {
     defaultRows,
     rows,
     setRows,
-    taxYears,
     activeRowId,
     setActiveRowId,
-    setErrors
+    setErrors,
+    taxYears,
+    setResults
   } = useContext(LateRefundsContext)
 
   const handleAddRow = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault()
+    invalidateResults()
     setRows([...rows, {
       id: uniqid(),
-      taxYears: taxYears,
       taxYear: taxYears[0],
       debt: ''
     }])
@@ -38,6 +39,7 @@ function LateRefundsTable(props: LateRefundsTable) {
 
   const handleDeleteRow = (e: React.MouseEvent) => {
     e.preventDefault()
+    invalidateResults()
     if(activeRowId) {
       setRows(rows.filter((row: LateRefundsTableRowProps) => row.id !== activeRowId))
       // errors are now stale
@@ -47,31 +49,21 @@ function LateRefundsTable(props: LateRefundsTable) {
   }
 
   const handleClearForm = () => {
-    // clear form
     setBankHolidaysNo('')
     setRows(defaultRows)
-
-    // clear results
-
-    // reset errors
+    setResults(null)
     setErrors({})
+  }
+
+  const invalidateResults = () => {
+    setResults(null)
   }
 
   return (
     <>
+      <h2 className="section-heading">Refunds</h2>
       <table className="contribution-details section-outer--top">
         <thead>
-        <tr className="clear bottom-nobor">
-          <th></th>
-          <th className="border lg"><span>Tax year</span></th>
-          <th colSpan={3}></th>
-        </tr>
-        <tr className="clear">
-          <th></th>
-          <th className="border"><span>Refund</span></th>
-          <th className="border"><span>Amount Paid</span></th>
-          <th className="border" colSpan={2}><span>Amount for interest</span></th>
-        </tr>
         <tr>
           <th>
             #<span className="govuk-visually-hidden"> Row number</span>
@@ -85,7 +77,6 @@ function LateRefundsTable(props: LateRefundsTable) {
         <tbody>
         {rows.map((row: LateRefundsTableRowProps, index: number) => (
           <LateRefundsTableRow
-            taxYears={taxYears}
             row={row}
             index={index}
             printView={printView}

@@ -10,18 +10,20 @@ import TextInput from '../../helpers/formhelpers/TextInput'
 function LateRefundsTableRow(props: {
   row: LateRefundsTableRowProps,
   index: number,
-  printView: boolean,
-  taxYears: TaxYear[]
+  printView: boolean
 }) {
   const {
+    taxYears,
     rows,
     setRows,
     activeRowId,
     setActiveRowId,
-    errors
+    errors,
+    setResults
   } = useContext(LateRefundsContext)
 
   const handleTaxYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    invalidateResults()
     const ty = e.currentTarget.value
 
     const tYObject: TaxYear = {
@@ -36,12 +38,17 @@ function LateRefundsTableRow(props: {
   }
 
   const handleChange = (row: LateRefundsTableRowProps, e:  React.ChangeEvent<HTMLInputElement>) => {
+    invalidateResults()
     setRows(rows.map((cur: LateRefundsTableRowProps) =>
       cur.id === row.id ? {...cur, refund: e.currentTarget.value} : cur
     ))
   }
 
-  const { index, row, printView, taxYears } = props
+  const invalidateResults = () => {
+    setResults(null)
+  }
+
+  const { index, row, printView } = props
   return (
     <tr
       className={activeRowId === row.id ? "active" : ""}
@@ -63,7 +70,7 @@ function LateRefundsTableRow(props: {
           />
         }
       </td>
-      <td>{taxYearFromString(row.taxYear)}</td>
+      <td>{row.taxYear && taxYearFromString(row.taxYear)}</td>
       <td className={`input${errors[`${row.id}-refund`] ? ` error-cell` : ``}`}>
         {printView ?
           <div>{row.refund}</div>

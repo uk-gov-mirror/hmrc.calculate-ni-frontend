@@ -23,12 +23,15 @@ export default function Class1TableRow(props: TableRowProps) {
     setRows,
     errors,
     categories,
-    setPeriodNumbers
+    setPeriodNumbers,
+    result,
+    setResult
   } = useContext(ClassOneContext)
 
   const { config } = useContext(NiFrontendContext)
 
   const handleChange = (r: Row, e: React.ChangeEvent<HTMLInputElement>) => {
+    invalidateResults()
     setActiveRowId(r.id)
     setRows(rows.map((cur: Row) =>
       cur.id === r.id ?
@@ -48,7 +51,19 @@ export default function Class1TableRow(props: TableRowProps) {
     setPeriodNumbers()
   }
 
+  const invalidateResults = () => {
+    setResult(null)
+  }
+
   useEffect(periodCallBack, [row.period])
+
+  useEffect(() => {
+    setRows(rows.map((cur: Row) =>
+      (cur.id === row.id ? {
+      ...cur, category: categories[0]
+    } : cur)
+    ))
+  }, [categories])
 
   return (
     <tr
@@ -137,9 +152,9 @@ export default function Class1TableRow(props: TableRowProps) {
       </td>
       }
 
-      <td>{numeral(row.ee).format('$0,0.00')}</td>
-      <td>{numeral(row.er).format('$0,0.00')}</td>
-      {!printView && row.explain && row.explain.length > 0 &&
+      <td className="result-cell">{numeral(row.ee).format('$0,0.00')}</td>
+      <td className="result-cell">{numeral(row.er).format('$0,0.00')}</td>
+      {!printView && result && row.explain && row.explain.length > 0 &&
         <td>
            <a href={`#${row.id}-explain`} onClick={(e) => {
              e.preventDefault()
@@ -149,7 +164,10 @@ export default function Class1TableRow(props: TableRowProps) {
                className={`govuk-tag ${showExplanation === row.id ? 
                  `govuk-tag--blue` : `govuk-tag--grey`}`}
              >
-               ?
+               <span aria-hidden="true">?</span>
+               <span className="govuk-visually-hidden">
+                 Explain the results in this row
+               </span>
              </strong>
            </a>
         </td>

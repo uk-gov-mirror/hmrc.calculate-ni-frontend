@@ -1,6 +1,7 @@
-import React, {useContext, useState} from 'react'
+import React, {useContext, useEffect, useState} from 'react'
 import {validateDirectorsPayload} from '../../../validation/validation'
-import {PeriodLabel} from '../../../config'
+import {PeriodLabel, PeriodValue} from '../../../config'
+import {ClassOneRow} from '../../../calculation'
 
 // components
 import Details from '../shared/Details'
@@ -10,12 +11,12 @@ import ErrorSummary from '../../helpers/gov-design-system/ErrorSummary'
 import DirectorsPrintView from "./DirectorsPrintView";
 
 // types
-import {GovDateRange} from '../../../interfaces'
-import {ClassOneProRataRow, DirectorsContext, DirectorsRow, useDirectorsForm} from "./DirectorsContext";
+import {Class1DebtRow, GovDateRange} from '../../../interfaces'
+import {DirectorsContext, DirectorsRow, useDirectorsForm} from "./DirectorsContext";
+import {ClassOneRowInterface} from '../class1/ClassOneContext'
 
 // services
 import {hasKeys} from "../../../services/utils";
-import {ClassOneRowProRata} from "../../../calculation";
 
 const pageTitle = 'Directors’ contributions'
 
@@ -42,6 +43,10 @@ const DirectorsPage = () => {
     result,
     setResult
   } = useContext(DirectorsContext)
+
+  useEffect(() => {
+    invalidateResults()
+  }, [dateRange])
 
   const handleChange = ({
     currentTarget: { name, value },
@@ -70,21 +75,23 @@ const DirectorsPage = () => {
     }
 
     if(validateDirectorsPayload(payload, setErrors, taxYears)) {
-      const requestRows: Array<ClassOneProRataRow> = rows
-        .map((row: DirectorsRow) => new (ClassOneRowProRata as any)(
+      const requestRows: Array<ClassOneRowInterface> = rows
+        .map((row: DirectorsRow) => new (ClassOneRow as any)(
           row.id,
-          earningsPeriod === PeriodLabel.ANNUAL ? taxYear.from : dateRange.from,
-          earningsPeriod === PeriodLabel.ANNUAL ? taxYear.to : dateRange.to,
+          PeriodValue.MONTHLY,
           row.category,
           parseFloat(row.gross),
           false
         ))
 
-      setResult(ClassOneCalculator.calculateProRata(
-        taxYear.from,
+      const netNi = payload.niPaidNet || '0'
+      const employeeNi = payload.niPaidEmployee || '0'
+
+      setResult(ClassOneCalculator.calculate(
+        taxYear?.from,
         requestRows,
-        parseFloat(payload.niPaidNet),
-        parseFloat(payload.niPaidEmployee)
+        netNi,
+        employeeNi
       ))
 
       if (showSummaryIfValid) {
@@ -104,6 +111,10 @@ const DirectorsPage = () => {
     setResult(null)
     setNiPaidEmployee('')
     setNiPaidNet('')
+  }
+
+  const invalidateResults = () => {
+    setResult(null)
   }
 
   return (
