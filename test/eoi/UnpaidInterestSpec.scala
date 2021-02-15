@@ -16,13 +16,21 @@
 
 package eoi
 
-import cats.implicits._
+import cats.syntax.option._
 import java.time.LocalDate
 import java.time.LocalDate.{of => date}
 import org.scalatest._
 import spire.math.Interval
 
+
 class UnpaidInterestSpec extends FunSpec with Matchers {
+
+  describe("An Interval[LocalDate]") {
+    it("should give the correct number of days") {
+      assert(Interval.openUpper(date(2012,1,1), date(2012,1,2)).numberOfDays === 1.some)
+      assert(Interval.closed(date(2012,1,1), date(2012,1,2)).numberOfDays === 2.some)
+    }
+  }
 
   val rates: Map[Interval[LocalDate], BigDecimal] = List(
     date(2009,1,6).some -> "0.045",
@@ -35,19 +43,22 @@ class UnpaidInterestSpec extends FunSpec with Matchers {
     case (Some(start), rate) :: (Some(end), _) :: Nil =>
       Interval.openUpper(start, end) -> rate
     case (Some(start), rate) :: (None, _) :: Nil =>
-      Interval.above(start) -> rate
+      Interval.atOrAbove(start) -> rate
   }.toMap.mapValues(BigDecimal.apply)
 
   def calcInterest(amt: BigDecimal, on: LocalDate): Explained[BigDecimal] = {
-    val debtInterval = Interval.openUpper(on, LocalDate.now)
+    import cats.implicits._
+    val debtInterval = Interval.open(on, LocalDate.now)
     val amounts: List[Explained[BigDecimal]] =
       rates.toList.flatMap { case (i, annualizedRate) =>
         if (i intersects debtInterval) {
           val intersection = i.intersect(debtInterval)
           intersection.numberOfDays match {
             case Some(days) =>
-              val r = (days * annualizedRate / 365) gives
-              f"daysIn($intersection) * rate / 365 = $days * $annualizedRate / 365"
+              val daysAmnesty = (intersection.upperValue.get.getYear - intersection.lowerValue.get.getYear) + 2
+
+              val r = ((days - daysAmnesty) * annualizedRate / 365) gives
+              f"(daysIn($intersection) - daysAmnesty) * rate / 365 = ($days - $daysAmnesty) * $annualizedRate / 365"
               r :: Nil
             case _ => Nil
           }
@@ -62,10 +73,10 @@ class UnpaidInterestSpec extends FunSpec with Matchers {
   describe("An interest calculation") {
 
     val scenarios = List(
-      (500, 2015, 66.54),      
-      (500, 2016, 52.40),
-      (500, 2017, 38.69),
-      (500, 2018, 24.98)        
+      (500, 2015, 66.54), // 1 day and 6 days respectively for each band
+      (500, 2016, 52.40), // 1391 days expected, 1397, out by 6
+      (500, 2017, 38.69), // 1027 expected, 1032 computed, out by 5 days
+      (500, 2018, 24.98) // 663 days expected, 667 computed, out by 4 days
     )
 
     scenarios.zipWithIndex.foreach { case ((amt, year, expected), i) =>
