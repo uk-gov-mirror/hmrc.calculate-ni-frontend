@@ -46,16 +46,20 @@ class UnpaidInterestSpec extends FunSpec with Matchers {
       Interval.atOrAbove(start) -> rate
   }.toMap.mapValues(BigDecimal.apply)
 
-  def calcInterest(amt: BigDecimal, on: LocalDate): Explained[BigDecimal] = {
+  def calcInterest(
+    amt: BigDecimal,
+    from: LocalDate, 
+    to: LocalDate = LocalDate.now
+  ): Explained[BigDecimal] = {
     import cats.implicits._
-    val debtInterval = Interval.open(on, LocalDate.now)
+    val debtInterval = Interval.open(from, to)
     val amounts: List[Explained[BigDecimal]] =
       rates.toList.flatMap { case (i, annualizedRate) =>
         if (i intersects debtInterval) {
           val intersection = i.intersect(debtInterval)
           intersection.numberOfDays match {
             case Some(days) =>
-              val daysAmnesty = (intersection.upperValue.get.getYear - intersection.lowerValue.get.getYear) + 2
+              val daysAmnesty = 0
 
               val r = ((days - daysAmnesty) * annualizedRate / 365) gives
               f"(daysIn($intersection) - daysAmnesty) * rate / 365 = ($days - $daysAmnesty) * $annualizedRate / 365"
@@ -73,10 +77,10 @@ class UnpaidInterestSpec extends FunSpec with Matchers {
   describe("An interest calculation") {
 
     val scenarios = List(
-      (500, 2015, 66.54), // 1 day and 6 days respectively for each band
-      (500, 2016, 52.40), // 1391 days expected, 1397, out by 6
-      (500, 2017, 38.69), // 1027 expected, 1032 computed, out by 5 days
-      (500, 2018, 24.98) // 663 days expected, 667 computed, out by 4 days
+      (10000000, 2015, 1445016.38), // 1 day and 6 days respectively for each band
+      (10000000, 2016, 1051161.20), // 1391 days expected, 1397, out by 6
+      (10000000, 2017, 776912.56), // 1027 expected, 1032 computed, out by 5 days
+      (10000000, 2018, 502633.93) // 663 days expected, 667 computed, out by 4 days
     )
 
     scenarios.zipWithIndex.foreach { case ((amt, year, expected), i) =>
@@ -84,7 +88,7 @@ class UnpaidInterestSpec extends FunSpec with Matchers {
       val taxYear = date(year + 1, 4, 19)
 
       it(s"should align with a test case $i") {
-        val s = calcInterest(500, taxYear)
+        val s = calcInterest(amt, taxYear, date(2021, 2, 15))
         assert(s.value === expected, "\n  " + s.explain.mkString("\n  "))
       }
     }
