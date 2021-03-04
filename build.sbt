@@ -93,10 +93,9 @@ lazy val microservice = Project(appName, file("."))
     ),
     PlayKeys.playDefaultPort := 8668,
     reactDirectory := (baseDirectory in Compile) { _ /"react" }.value,
-    unmanagedSourceDirectories in Compile ++= ((unmanagedSourceDirectories in Compile) in common.jvm).value,
+    unmanagedSourceDirectories in Compile ++= ((unmanagedSourceDirectories in Compile) in common.jvm).value, // TODO: Comment and explain
     unmanagedResources in Compile += file("national-insurance.conf"),
-    dist := (dist dependsOn moveReact).value // ,
-    // (Test / test) := ((Test / test) dependsOn (calc / Test / test)).value
+    dist := (dist dependsOn moveReact).value
   )
   .settings(publishingSettings: _*)
   .configs(IntegrationTest)
@@ -149,3 +148,12 @@ lazy val `frontend` = project
     publishLocal := {}
   )
   .dependsOn(common.js)
+
+lazy val `config-importer` = project
+  .dependsOn(microservice) // to check we can parse the new configuration
+  .settings(
+    majorVersion := 0,            
+    publish := {},
+    publishLocal := {},
+    libraryDependencies += "com.github.tototoshi" %% "scala-csv" % "1.3.6"
+  )
