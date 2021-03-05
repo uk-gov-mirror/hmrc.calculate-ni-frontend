@@ -10,11 +10,10 @@ import {SuccessNotification} from "../shared/SuccessNotification";
 
 // types
 import {LateInterestContext, useLateInterestForm} from './LateInterestContext'
-import {validateLateInterestPayload} from '../../../validation/validation'
+import {stripCommas, validateLateInterestPayload} from '../../../validation/validation'
 import {hasKeys} from '../../../services/utils'
 import ErrorSummary from '../../helpers/gov-design-system/ErrorSummary'
 import LateInterestPrint from './LateInterestPrint'
-import SecondaryButton from '../../helpers/gov-design-system/SecondaryButton'
 import {Class1DebtRow} from '../../../interfaces'
 import {useDocumentTitle} from "../../../services/useDocumentTitle";
 import {SuccessNotificationContext} from '../../../services/SuccessNotificationContext'
@@ -72,7 +71,7 @@ const LateInterestPage = () => {
       const transformedRows = rows.map((row: Class1DebtRow) => {
         return {
           periodStart: row.taxYear?.from,
-          debt: row.debt
+          debt: stripCommas(row.debt)
         }
       })
       const remission = payload.hasRemissionPeriod ? new (RemissionPeriod as any)(dateRange.from, dateRange.to) : null

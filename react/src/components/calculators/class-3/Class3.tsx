@@ -5,7 +5,7 @@ import Details from "../shared/Details";
 import SecondaryButton from "../../helpers/gov-design-system/SecondaryButton";
 import {Class3Context, class3DefaultRows, useClass3Form} from "./Class3Context";
 import Class3Form from "./Class3Form";
-import {validateClass3Payload} from "../../../validation/validation";
+import {stripCommas, validateClass3Payload} from "../../../validation/validation";
 import Class3Print from './Class3Print'
 import {useDocumentTitle} from "../../../services/useDocumentTitle";
 
@@ -42,17 +42,14 @@ const Class3Page = () => {
         const payload = {
             rows
         }
-        if(validateClass3Payload(payload, setErrors, taxYears)) {
+
+        if(validateClass3Payload(payload, setErrors)) {
             rows.map(row => {
-                const result = WeeklyContributionsCalculator
+                row.actualWeeks = WeeklyContributionsCalculator
                   .calculate(
                     row.dateRange.from,
-                    row.dateRange.to,
-                    parseFloat(row.earningsFactor)
+                    row.dateRange.to
                   )
-                row.maxWeeks = result.maxPotentialWeeks
-                row.actualWeeks = result.actualWeeks
-                row.deficiency = result.deficient
                 return row
             })
             setShowSummary(showSummaryIfValid)

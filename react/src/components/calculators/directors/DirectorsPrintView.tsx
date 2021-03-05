@@ -3,11 +3,11 @@ import {DirectorsContext} from "./DirectorsContext";
 
 // components
 import CategoryTotals from '../shared/CategoryTotals'
-import DirectorsEarningsTable from './DirectorsContributionsTable'
+import DirectorsTable from './DirectorsTable'
 import DetailsPrint from "../shared/DetailsPrint";
 
 // types
-import {Calculators, Class1DirectorsSavePrintProps} from '../../../interfaces'
+import {Class1DirectorsSavePrintProps} from '../../../interfaces'
 import BackLink from "../../helpers/gov-design-system/BackLink";
 import {govDateString, taxYearShorthand} from "../../../services/utils";
 import {PeriodLabel} from "../../../config";
@@ -63,7 +63,7 @@ function DirectorsPrintView(props: Class1DirectorsSavePrintProps) {
           </div>
         }
 
-        <DirectorsEarningsTable
+        <DirectorsTable
           showBands={true}
           printView={true}
         />

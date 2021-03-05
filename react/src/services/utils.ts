@@ -6,7 +6,7 @@ import {
   TotalType,
   TaxYear
 } from "../interfaces";
-import {ErrorMessage} from "../validation/validation";
+import {ErrorMessage, stripCommas} from "../validation/validation";
 import {Band, Row} from "../components/calculators/class1/ClassOneContext";
 import {DirectorsUIRow} from "../components/calculators/directors/DirectorsContext";
 
@@ -31,7 +31,7 @@ const getTotalsInCategory = (
     .filter(row => row.category === category)
     .reduce((total: number, row: Row | DirectorsUIRow) =>
         row.hasOwnProperty(type) ?
-          total + parseFloat(row[type].toString()) : total
+          total + parseFloat(stripCommas(row[type].toString())) : total
     , 0)
 }
 
@@ -132,3 +132,9 @@ export const buildDescribedByKeys = (
 }
 
 export const sterlingStringValue = (value: string) => numeral(value).format('$0,0.00')
+
+export const maybeFromBounds = (value: string) => {
+  const amount = /\(([^)]+)\)/.exec(value)
+  return amount ? amount[1] : value
+}
+

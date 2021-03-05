@@ -51,13 +51,9 @@ export interface Calculated {
 
 export interface Class3Row {
   id: string,
-  earningsFactor: string,
   dateRange: GovDateRange,
-  maxWeeks?: number
   actualWeeks?: number
-  deficiency?: number
 }
-
 
 // Table
 export interface TaxYear {
@@ -89,7 +85,7 @@ export interface Class1DebtRow {
 
 export interface LateRefundsTableRowProps {
   id: string
-  taxYear: TaxYear
+  taxYear: TaxYear | null
   refund: string,
   payable: string | null
 }
@@ -154,7 +150,7 @@ export interface TextInputProps {
   hiddenLabel?: boolean 
   name: string
   inputClassName: string
-  inputValue: string
+  inputValue: string | number | undefined
   placeholderText?: string
   pattern?: string
   inputMode?: "numeric"

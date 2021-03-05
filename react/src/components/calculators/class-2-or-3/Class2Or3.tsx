@@ -1,5 +1,5 @@
 import React, {useState, useContext, useEffect, useRef} from 'react'
-import {validateClass2Or3Payload} from '../../../validation/validation'
+import {stripCommas, validateClass2Or3Payload} from '../../../validation/validation'
 import {hasKeys, isEmpty} from "../../../services/utils";
 import {useDocumentTitle} from "../../../services/useDocumentTitle";
 
@@ -34,7 +34,8 @@ const Class2Or3Page = () => {
     errors,
     setErrors,
     result,
-    setResult
+    setResult,
+    finalDate
   } = useContext(Class2Or3Context)
 
   const { successNotificationsOn } = useContext(SuccessNotificationContext)
@@ -65,7 +66,7 @@ const Class2Or3Page = () => {
       earningsFactor,
       taxYear,
       activeClass,
-      finalDate: ClassTwoCalculator.getFinalDate(taxYear?.from)
+      finalDate
     }
 
     if(validateClass2Or3Payload(payload, setErrors)) {
@@ -73,13 +74,13 @@ const Class2Or3Page = () => {
         ClassTwoCalculator.calculate(
           payload.taxYear?.from,
           payload.paymentEnquiryDate,
-          parseFloat(payload.earningsFactor)
+          parseFloat(stripCommas(payload.earningsFactor))
         )
         :
         ClassThreeCalculator.calculate(
           payload.taxYear?.from,
           payload.paymentEnquiryDate,
-          parseFloat(payload.earningsFactor)
+          parseFloat(stripCommas(payload.earningsFactor))
         )
 
       setResult(resultFromCalculator)

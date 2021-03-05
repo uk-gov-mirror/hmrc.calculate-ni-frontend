@@ -1,5 +1,5 @@
 import React, {useContext, useEffect, useRef, useState} from 'react'
-import {validateDirectorsPayload} from '../../../validation/validation'
+import {stripCommas, validateDirectorsPayload} from '../../../validation/validation'
 import {PeriodLabel} from '../../../config'
 import {DirectorsRow} from '../../../calculation'
 
@@ -19,6 +19,7 @@ import {hasKeys} from "../../../services/utils";
 import {SuccessNotification} from "../shared/SuccessNotification";
 import {useDocumentTitle} from "../../../services/useDocumentTitle";
 import SecondaryButton from '../../helpers/gov-design-system/SecondaryButton'
+import PrintButtons from "../shared/PrintButtons";
 
 const pageTitle = 'Directors’ contributions'
 
@@ -91,11 +92,11 @@ const DirectorsPage = () => {
         .map((row: DirectorsUIRow) => new (DirectorsRow as any)(
           row.id,
           row.category,
-          parseFloat(row.gross)
+          parseFloat(stripCommas(row.gross))
         ))
 
-      const netNi = payload.niPaidNet || '0'
-      const employeeNi = payload.niPaidEmployee || '0'
+      const netNi = stripCommas(payload.niPaidNet) || '0'
+      const employeeNi = stripCommas(payload.niPaidEmployee) || '0'
       const appApplicable = askApp ? app === 'Yes' : undefined
 
       setResult(DirectorsCalculator.calculate(
@@ -193,24 +194,11 @@ const DirectorsPage = () => {
         />
       </div>
 
-      {!showSummary && (
-        <div className="container section--top section-outer--top">
-          <div className="form-group half">
-            <SecondaryButton
-              label="Save and print"
-              onClick={handleShowSummary}
-            />
-          </div>
-        </div>
-      )}
+      <PrintButtons
+        showSummary={showSummary}
+        handleShowSummary={handleShowSummary}
+      />
 
-      {showSummary && (
-        <div className="govuk-!-padding-bottom-9 section--top">
-          <button className="button" onClick={() => window.print()}>
-            Save and print
-          </button>
-        </div>
-      )}
     </div>
   )
 }
