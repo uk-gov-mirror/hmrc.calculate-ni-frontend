@@ -112,7 +112,7 @@ case class Configuration(
    'X' -> "Exempt"
   ),
   classOne: Map[Interval[LocalDate], Map[String, RateDefinition]],
-  classOneAB: Map[Interval[LocalDate], BigDecimal],
+//  classOneAB: Map[Interval[LocalDate], BigDecimal],
   classTwo: Map[Interval[LocalDate], ClassTwo],
   classThree: Map[Interval[LocalDate], ClassThree],
   classFour: Map[Interval[LocalDate], ClassFour]
@@ -139,10 +139,10 @@ case class Configuration(
     } yield (partial / total)
   }
 
-  def calculateClassOneAAndB(
-    on: LocalDate,
-    amount: BigDecimal
-  ): Option[BigDecimal] = classOneAB.at(on).map(amount * _)
+  // def calculateClassOneAAndB(
+  //   on: LocalDate,
+  //   amount: BigDecimal
+  // ): Option[BigDecimal] = classOneAB.at(on).map(amount * _)
 
   def calculateClassThree(
     on: LocalDate,
