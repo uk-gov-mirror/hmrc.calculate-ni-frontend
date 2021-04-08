@@ -271,7 +271,7 @@ case class UnofficialDefermentResult(
           .getOrElse(sys.error("Could not find earnings in rebate band"))
         val rebateRate =
           getBandRates(band).getOrElse(row.category, Zero).abs
-        (row.employeeNICs + rebateableAmount * rebateRate).roundNi
+        row.employeeNICs + (rebateableAmount * rebateRate).roundNi
 
 
       case _ =>
