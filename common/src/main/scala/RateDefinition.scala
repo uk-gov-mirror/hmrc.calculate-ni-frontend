@@ -106,9 +106,9 @@ object RateDefinition {
   }
 
   object VagueRateDefinition {
-    val bothBounded = "([a-zA-Z0-9]*) to ([a-z0-9]*)".r
-    val lowerBounded = "above ([a-z0-9]*)".r
-    val upperBounded = "up to ([a-z0-9]*)".r
+    val bothBounded = "([a-zA-Z 0-9]*) [tT]o ([a-z A-Z0-9]*)".r
+    val lowerBounded = "[aA]bove ([a-z A-Z0-9]*)".r
+    val upperBounded = "[uU]p [tT]o ([a-z A-Z0-9]*)".r
   }
 
 }

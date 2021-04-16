@@ -24,7 +24,9 @@ import uk.gov.hmrc.calculatenifrontend.views.html._
 import eoi._
 import java.time.LocalDate
 import spire.math.Interval
+import spire.implicits._
 import play.twirl.api.Html
+import RateDefinition.VagueRateDefinition._
 
 @Singleton
 class TablesController @Inject()(
@@ -71,9 +73,20 @@ class TablesController @Inject()(
 
     val filteredBand: List[(String, RateDefinition)] = band.filter{
       case (_, v) => (v.employee.keySet ++ v.employer.keySet).contains(selectedCategory)
-    }.toList.sortBy(_._2.year.lowerValue.get)
+    }.toList.sortBy(_._2.year.lowerValue.getOrElse(Zero))
 
-    Ok(classOnePage(selectedInterval, intervals, selectedCategory, categories, filteredBand))
+    val upTo = filteredBand.headOption.flatMap { 
+      case (bothBounded(to,_),band) if band.year.lowerValue.getOrElse(Zero) != Zero =>
+        Some(s"Up to $to" -> RateDefinition(
+          Interval.openUpper(Zero, band.year.lowerValue.getOrElse(Zero)),
+          band.month.map { b => Interval.openUpper(Zero, b.lowerValue.getOrElse(Zero))},
+          band.week.map  { b => Interval.openUpper(Zero, b.lowerValue.getOrElse(Zero))},
+          band.fourWeek.map  { b => Interval.openUpper(Zero, b.lowerValue.getOrElse(Zero))}
+        ))
+      case _ => None
+    }.toList
+
+    Ok(classOnePage(selectedInterval, intervals, selectedCategory, categories, upTo ++ filteredBand))
   }
 
   def classTwo(
