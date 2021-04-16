@@ -1,4 +1,4 @@
-import React, {useContext} from 'react';
+import React, {useContext, useState} from 'react';
 import uniqid from 'uniqid';
 
 import numeral from 'numeral'
@@ -16,6 +16,7 @@ import NiPaidInputs from "../shared/NiPaidInputs";
 numeral.locale('en-gb');
 
 function Class1Form(props: Class1FormProps) {
+  const [repeatQty, setRepeatQty] = useState<string>('1')
   const { resetTotals } = props
   const {
     taxYears,
@@ -43,19 +44,26 @@ function Class1Form(props: Class1FormProps) {
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     setResult(null)
+    const repeatTimes = parseInt(repeatQty) > 0 ? parseInt(repeatQty) : 1
     const lastRow = rows[rows.length -1]
-    const periodNumber = rows.filter(row => row.period === lastRow.period).length + 1
-    const id = uniqid()
-    setRows([...rows, {
-      id: id,
-      category: lastRow.category,
-      period: lastRow.period,
-      gross: lastRow.gross,
-      number: periodNumber,
-      ee: 0,
-      er: 0
-    }])
-    setActiveRowId(id)
+    const newRows = []
+    let id
+    for (let i = 0; i < repeatTimes; i++) {
+      const periodNumber = rows.filter(row => row.period === lastRow.period).length + 1
+      id = uniqid()
+      newRows.push({
+        id: id,
+        category: lastRow.category,
+        period: lastRow.period,
+        gross: lastRow.gross,
+        number: periodNumber,
+        ee: 0,
+        er: 0
+      })
+
+    }
+    setRows([...rows, ...newRows])
+    id && setActiveRowId(id)
   }
 
   const handleDeleteRow = (e: React.MouseEvent) => {
@@ -103,6 +111,16 @@ function Class1Form(props: Class1FormProps) {
               <SecondaryButton
                 label="Repeat row"
                 onClick={handleClick}
+              />
+              {` x `}
+              <input
+                className="govuk-input govuk-input--width-2 borderless"
+                type="number"
+                name="repeatQty"
+                value={repeatQty}
+                onChange={(e) => {
+                  setRepeatQty(e.currentTarget.value)
+                }}
               />
             </div>
 
